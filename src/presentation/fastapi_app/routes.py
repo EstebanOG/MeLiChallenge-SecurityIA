@@ -2,7 +2,6 @@ from typing import List, Optional
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from ...domain.entities.log_entry import LogEntry
-from ...infrastructure.detectors.simple_rule_detector import SimpleRuleDetector
 from ...infrastructure.detectors.ml_isolation_forest_detector import IsolationForestDetector
 from ...infrastructure.services.kaggle_service import download_and_extract_dataset
 from ...infrastructure.services.csic_parser import parse_csic_files
