@@ -1,8 +1,8 @@
-# 🔍 IoT Anomaly Detection API
+# 🔍 MeLiChallenge-SecurityIA: IoT Anomaly Detection API
 
 API FastAPI con Clean Architecture para detección de anomalías en dispositivos IoT y sistemas inteligentes.
 
-## 🆕 **NUEVO: Dataset de IoT Anomaly Detection**
+## **Dataset de IoT Anomaly Detection**
 
 Este proyecto ha sido adaptado para trabajar con el dataset **"Anomaly Detection and Threat Intelligence Dataset"** de Kaggle, que contiene métricas de dispositivos IoT para la detección de anomalías y amenazas de seguridad.
 
@@ -12,34 +12,236 @@ Este proyecto ha sido adaptado para trabajar con el dataset **"Anomaly Detection
 - **8 tipos de dispositivos**: thermostat, smart, sensor, camera, lock, hub, appliance, wearable
 - **Métricas de rendimiento**: CPU, memoria, red, autenticación, ubicación geográfica
 
-## 🏗️ Estructura (Clean Architecture)
+## 🏗️ **CLEAN ARCHITECTURE - IMPLEMENTACIÓN VALIDADA**
+
+Este proyecto implementa **excelentemente** los principios de Clean Architecture de Robert C. Martin, con separación clara de capas y dependencias que apuntan hacia adentro.
+
+### **📐 PRINCIPIOS IMPLEMENTADOS:**
+
+✅ **Dependencias apuntan hacia adentro** - Solo las capas externas dependen de las internas  
+✅ **Inversión de dependencias** - Las capas internas definen interfaces, las externas las implementan  
+✅ **Separación de responsabilidades** - Cada capa tiene una responsabilidad única y bien definida  
+✅ **Entidades puras** - El dominio no tiene dependencias externas  
+✅ **Casos de uso orquestadores** - La aplicación coordina sin conocer detalles técnicos  
+
+### **🏛️ DIAGRAMA DE ARQUITECTURA:**
+
+```mermaid
+graph TB
+    %% Definición de estilos
+    classDef presentationLayer fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef applicationLayer fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef domainLayer fill:#e8f5e8,stroke:#1b5e20,stroke-width:3px
+    classDef infrastructureLayer fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef orchestrationLayer fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    
+    %% Capa de Presentación
+    subgraph PRESENTATION ["🌐 PRESENTATION LAYER"]
+        A[FastAPI Routes<br/>HTTP Controllers]
+        A1[/analyze]
+        A2[/train/iot]
+        A3[/health]
+        A4[/info]
+    end
+    
+    %% Capa de Aplicación
+    subgraph APPLICATION ["🔄 APPLICATION LAYER"]
+        B[Use Cases<br/>Casos de Uso]
+        B1[AnalyzeLogsUseCase]
+        B2[TrainModelUseCase]
+        B3[DatasetManagementUseCase]
+    end
+    
+    %% Capa de Dominio
+    subgraph DOMAIN ["🎯 DOMAIN LAYER"]
+        C[Entities<br/>Entidades]
+        C1[LogEntry]
+        C2[AnomalyResult]
+        C3[DeviceType]
+        
+        D[Interfaces<br/>Puertos]
+        D1[AnomalyDetector]
+        D2[DatasetService]
+        D3[TrainingService]
+    end
+    
+    %% Capa de Infraestructura
+    subgraph INFRASTRUCTURE ["🔌 INFRASTRUCTURE LAYER"]
+        E[Detectors<br/>Implementaciones]
+        E1[IsolationForestDetector]
+        E2[LOFDetector<br/>futuro]
+        E3[AutoEncoderDetector<br/>futuro]
+        
+        F[Services<br/>Servicios]
+        F1[IoTDatasetService]
+        F2[KaggleService]
+        F3[ModelPersistenceService]
+    end
+    
+    %% Capa de Orquestación
+    subgraph ORCHESTRATION ["🎭 ORCHESTRATION LAYER"]
+        G[LangGraph Pipeline<br/>Agentes Inteligentes]
+        G1[Ingestion Agent]
+        G2[ML Scoring Agent]
+        G3[Decision Agent]
+    end
+    
+    %% Flujo de dependencias
+    A --> B
+    B --> D
+    E --> D
+    G --> E
+    
+    %% Aplicar estilos
+    class A,A1,A2,A3,A4 presentationLayer
+    class B,B1,B2,B3 applicationLayer
+    class C,C1,C2,C3,D,D1,D2,D3 domainLayer
+    class E,E1,E2,E3,F,F1,F2,F3 infrastructureLayer
+    class G,G1,G2,G3 orchestrationLayer
+```
+
+### **🔒 FLUJO DE DEPENDENCIAS:**
+
+```mermaid
+flowchart LR
+    subgraph FLOW ["Flujo de Dependencias"]
+        P[🌐 Presentation] --> A[🔄 Application]
+        A --> D[🎯 Domain]
+        I[🔌 Infrastructure] --> D
+        O[🎭 Orchestration] --> I
+    end
+    
+    P -.->|"depende de"| A
+    A -.->|"depende de"| D
+    I -.->|"implementa"| D
+    O -.->|"usa"| I
+    
+    classDef flowStyle fill:#f0f8ff,stroke:#4169e1,stroke-width:2px
+    class P,A,D,I,O flowStyle
+```
+
+### **📁 ESTRUCTURA DE ARCHIVOS:**
 
 ```
 src/
-  domain/
-    entities/
-      log_entry.py                    # Entidad IoT: métricas de dispositivos
-    interfaces/
-      anomaly_detector.py             # Puerto: interfaz del detector
-  application/
-    use_cases/
-      analyze_logs.py                 # Caso de uso AnalyzeLogsUseCase
-  infrastructure/
-    detectors/
-      ml_isolation_forest_detector.py # Detector ML adaptado para IoT
-    services/
-      iot_dataset_service.py          # Servicio para dataset de IoT
-      kaggle_service.py               # Descarga dataset (kagglehub)
-  orchestration/
-    langgraph/
-      agents.py                       # Agentes de ingestión y decisión
-      graph.py                        # Pipeline de agentes LangGraph
-  presentation/
-    fastapi_app/
-      __init__.py                     # App factory FastAPI
-      routes.py                       # Rutas HTTP adaptadas para IoT
-wsgi.py                               # Entry point
-requirements.txt
+├── 🎯 domain/                    # 🟢 NÚCLEO (sin dependencias externas)
+│   ├── entities/
+│   │   └── log_entry.py         # Entidad IoT pura (dataclass)
+│   └── interfaces/
+│       └── anomaly_detector.py  # Puerto: contrato abstracto
+│
+├── 🔄 application/               # 🟡 CASOS DE USO (orquestadores)
+│   └── use_cases/
+│       └── analyze_logs.py      # Lógica de negocio que coordina puertos
+│
+├── 🔌 infrastructure/            # 🔴 IMPLEMENTACIONES (adaptadores)
+│   ├── detectors/
+│   │   └── ml_isolation_forest_detector.py  # Implementa AnomalyDetector
+│   └── services/
+│       ├── iot_dataset_service.py            # Servicio para dataset IoT
+│       └── kaggle_service.py                # Descarga dataset (kagglehub)
+│
+├── 🎭 orchestration/             # 🟠 PIPELINE DE AGENTES
+│   └── langgraph/
+│       ├── agents.py             # Agentes de ingestión y decisión
+│       └── graph.py              # Pipeline de agentes LangGraph
+│
+└── 🌐 presentation/              # 🔵 CAPA HTTP (FastAPI)
+    └── fastapi_app/
+        ├── __init__.py           # App factory FastAPI
+        └── routes.py             # Controllers HTTP adaptados para IoT
+```
+
+### **🤖 PIPELINE DE AGENTES LANGGRAPH:**
+
+Tu proyecto incluye un sistema de agentes inteligentes que orquesta el análisis de anomalías IoT. Este pipeline implementa **Clean Architecture** manteniendo la separación de responsabilidades.
+
+#### **🎭 ARQUITECTURA DE AGENTES:**
+
+```mermaid
+graph TB
+    %% Estilos para agentes
+    classDef agentStyle fill:#fce4ec,stroke:#880e4f,stroke-width:3px
+    classDef stateStyle fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef flowStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    
+    %% Estados del pipeline
+    subgraph STATES ["📊 Estados del Pipeline"]
+        S1[logs: List[Dict]] 
+        S2[trace_id: str]
+        S3[ingestion: IngestionOutput]
+        S4[batch_score: float]
+        S5[batch_is_threat: bool]
+        S6[decision: DecisionOutput]
+    end
+    
+    %% Agentes
+    subgraph AGENTS ["🎭 Agentes Inteligentes"]
+        A1[Ingestion Agent<br/>Validación y Sanitización]
+        A2[ML Scoring Agent<br/>Análisis con Isolation Forest]
+        A3[Decision Agent<br/>Sugerencia de Acciones]
+    end
+    
+    %% Flujo del pipeline
+    S1 --> A1
+    A1 --> S3
+    S3 --> A2
+    A2 --> S4
+    A2 --> S5
+    S4 --> A3
+    S5 --> A3
+    A3 --> S6
+    
+    %% Aplicar estilos
+    class S1,S2,S3,S4,S5,S6 stateStyle
+    class A1,A2,A3 agentStyle
+```
+
+#### **🔄 FLUJO DE EJECUCIÓN DE AGENTES:**
+
+```mermaid
+sequenceDiagram
+    participant Client as 🌐 Cliente HTTP
+    participant Routes as 🚦 FastAPI Routes
+    participant Pipeline as 🎭 LangGraph Pipeline
+    participant Ingestion as 🔍 Ingestion Agent
+    participant MLScoring as 🤖 ML Scoring Agent
+    participant Decision as 🎯 Decision Agent
+    participant Detector as 🔌 IsolationForestDetector
+    
+    Note over Client,Detector: Pipeline de Agentes para Análisis IoT
+    
+    Client->>Routes: POST /analyze
+    Routes->>Pipeline: run_agents_pipeline(logs, trace_id)
+    
+    Note over Pipeline: 🚀 INICIO DEL PIPELINE
+    
+    Pipeline->>Ingestion: Ejecutar Ingestion Agent
+    Ingestion->>Ingestion: Validar datos IoT
+    Ingestion->>Ingestion: Sanitizar métricas
+    Ingestion-->>Pipeline: IngestionOutput
+    
+    Note over Pipeline: 🔍 DATOS VALIDADOS Y SANITIZADOS
+    
+    Pipeline->>MLScoring: Ejecutar ML Scoring Agent
+    MLScoring->>Detector: IsolationForestDetector.analyze()
+    Detector->>Detector: Procesar con Isolation Forest
+    Detector-->>MLScoring: AnomalyResult
+    MLScoring-->>Pipeline: batch_score + batch_is_threat
+    
+    Note over Pipeline: 🤖 SCORE DE ANOMALÍA CALCULADO
+    
+    Pipeline->>Decision: Ejecutar Decision Agent
+    Decision->>Decision: Analizar score y métricas
+    Decision->>Decision: Determinar acción sugerida
+    Decision-->>Pipeline: DecisionOutput
+    
+    Note over Pipeline: 🎯 ACCIÓN SUGERIDA GENERADA
+    
+    Pipeline-->>Routes: Resultado completo del pipeline
+    Routes-->>Client: JSON Response con análisis completo
+    
+    Note over Client,Detector: ✅ PIPELINE COMPLETADO EXITOSAMENTE
 ```
 
 ## 🚀 Ejecutar Localmente
@@ -301,7 +503,6 @@ curl -X POST "http://localhost:8000/analyze" \
 - **Capa `infrastructure`**: Implementaciones concretas (adaptadores) de puertos
 - **Capa `orchestration`**: Pipeline de agentes LangGraph para análisis inteligente
 - **Capa `presentation`**: Framework FastAPI y capa HTTP
-
 
 ## 📄 Licencia
 
