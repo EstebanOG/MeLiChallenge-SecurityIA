@@ -163,20 +163,19 @@ graph TB
     %% Estilos para agentes
     classDef agentStyle fill:#fce4ec,stroke:#880e4f,stroke-width:3px
     classDef stateStyle fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
-    classDef flowStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
     
     %% Estados del pipeline
-    subgraph STATES ["📊 Estados del Pipeline"]
-        S1[logs: List[Dict]] 
-        S2[trace_id: str]
-        S3[ingestion: IngestionOutput]
-        S4[batch_score: float]
-        S5[batch_is_threat: bool]
-        S6[decision: DecisionOutput]
+    subgraph STATES ["Estados del Pipeline"]
+        S1[logs List]
+        S2[trace_id]
+        S3[ingestion Output]
+        S4[batch_score]
+        S5[batch_is_threat]
+        S6[decision Output]
     end
     
     %% Agentes
-    subgraph AGENTS ["🎭 Agentes Inteligentes"]
+    subgraph AGENTS ["Agentes Inteligentes"]
         A1[Ingestion Agent<br/>Validación y Sanitización]
         A2[ML Scoring Agent<br/>Análisis con Isolation Forest]
         A3[Decision Agent<br/>Sugerencia de Acciones]
