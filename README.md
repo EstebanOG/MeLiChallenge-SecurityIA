@@ -38,10 +38,10 @@ graph TB
     %% Capa de Presentación
     subgraph PRESENTATION ["🌐 PRESENTATION LAYER"]
         A[FastAPI Routes<br/>HTTP Controllers]
-        A1[/analyze]
-        A2[/train/iot]
-        A3[/health]
-        A4[/info]
+        A1[analyze endpoint]
+        A2[train iot endpoint]
+        A3[health endpoint]
+        A4[info endpoint]
     end
     
     %% Capa de Aplicación
