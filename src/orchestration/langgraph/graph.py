@@ -35,12 +35,19 @@ def _node_ml_scoring(state: PipelineState) -> PipelineState:
     log_entries: List[LogEntry] = [
         LogEntry(
             timestamp=item["timestamp"],
-            ip=item["ip"],
-            method=item["method"],
-            path=item["path"],
-            status=item["status"],
-            user_agent=item.get("user_agent"),
-            response_time_ms=item.get("response_time_ms"),
+            device_id=item["device_id"],
+            device_type=item["device_type"],
+            cpu_usage=item["cpu_usage"],
+            memory_usage=item["memory_usage"],
+            network_in_kb=item["network_in_kb"],
+            network_out_kb=item["network_out_kb"],
+            packet_rate=item["packet_rate"],
+            avg_response_time_ms=item["avg_response_time_ms"],
+            service_access_count=item["service_access_count"],
+            failed_auth_attempts=item["failed_auth_attempts"],
+            is_encrypted=item["is_encrypted"],
+            geo_location_variation=item["geo_location_variation"],
+            label=item.get("label"),
         )
         for item in ingestion["logs"]
     ]

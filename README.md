@@ -1,147 +1,308 @@
-# MELIChallenge
+# 🔍 IoT Anomaly Detection API
 
-API FastAPI con Clean Architecture para análisis básico de logs.
+API FastAPI con Clean Architecture para detección de anomalías en dispositivos IoT y sistemas inteligentes.
 
-## Estructura (Clean Architecture)
+## 🆕 **NUEVO: Dataset de IoT Anomaly Detection**
+
+Este proyecto ha sido adaptado para trabajar con el dataset **"Anomaly Detection and Threat Intelligence Dataset"** de Kaggle, que contiene métricas de dispositivos IoT para la detección de anomalías y amenazas de seguridad.
+
+### **Características del Dataset:**
+- **10,000 registros** de dispositivos IoT
+- **4 clases**: Normal, Anomaly_DoS, Anomaly_Injection, Anomaly_Spoofing
+- **8 tipos de dispositivos**: thermostat, smart, sensor, camera, lock, hub, appliance, wearable
+- **Métricas de rendimiento**: CPU, memoria, red, autenticación, ubicación geográfica
+
+## 🏗️ Estructura (Clean Architecture)
+
 ```
 src/
   domain/
     entities/
-      log_entry.py            # Entidad de dominio: LogEntry
+      log_entry.py                    # Entidad IoT: métricas de dispositivos
     interfaces/
-      anomaly_detector.py     # Puerto: interfaz del detector
+      anomaly_detector.py             # Puerto: interfaz del detector
   application/
     use_cases/
-      analyze_logs.py         # Caso de uso AnalyzeLogsUseCase
+      analyze_logs.py                 # Caso de uso AnalyzeLogsUseCase
   infrastructure/
     detectors/
-      simple_rule_detector.py # Adaptador: detector mínimo (stub)
-      ml_isolation_forest_detector.py # Detector ML (Isolation Forest)
+      ml_isolation_forest_detector.py # Detector ML adaptado para IoT
     services/
-      kaggle_service.py       # Descarga dataset (kagglehub)
-      csic_parser.py          # Parser/limpieza CSIC → LogEntry
+      iot_dataset_service.py          # Servicio para dataset de IoT
+      kaggle_service.py               # Descarga dataset (kagglehub)
+  orchestration/
+    langgraph/
+      agents.py                       # Agentes de ingestión y decisión
+      graph.py                        # Pipeline de agentes LangGraph
   presentation/
     fastapi_app/
-      __init__.py             # App factory FastAPI
-      routes.py               # Rutas HTTP (/analyze, /train, /train/kaggle, /health)
-wsgi.py                       # Entry point
+      __init__.py                     # App factory FastAPI
+      routes.py                       # Rutas HTTP adaptadas para IoT
+wsgi.py                               # Entry point
 requirements.txt
 ```
 
-## Ejecutar localmente
+## 🚀 Ejecutar Localmente
+
 ```bash
+# 1. Crear entorno virtual
 python -m venv .venv
 source .venv/bin/activate   # En Windows: .venv\\Scripts\\Activate
+
+# 2. Instalar dependencias
 pip install -r requirements.txt
+
+# 3. Iniciar la API
 python wsgi.py  # inicia uvicorn en reload
 ```
 
-## Endpoints
-- POST `/train/kaggle` (recomendado)
-  - Descarga el dataset público CSIC 2010 con `kagglehub`, lo parsea y entrena el modelo Isolation Forest.
-  - Requiere `kagglehub` (ya en requirements) y acceso público al dataset.
-  - Ejemplo:
-    ```bash
-    curl -X POST http://localhost:8000/train/kaggle
-    ```
-  - Respuesta ejemplo:
-    ```json
-    {"status":"trained","samples":12345,"dataset":"ispangler/csic-2010-web-application-attacks"}
-    ```
+La API estará disponible en: `http://localhost:8000`
 
-- POST `/train`
-  - Entrena el modelo con un lote de logs enviado por el cliente.
-  - Request JSON (igual formato que /analyze):
-    ```json
-    {"logs":[{"timestamp":"2025-01-01T00:00:00Z","ip":"1.2.3.4","method":"GET","path":"/","status":200}]}
-    ```
-  - Respuesta: `{"status":"trained","samples":N}`.
+## 🔧 Endpoints Principales
 
-- POST `/analyze`
-  - Request JSON ejemplo:
-    ```json
-    {
-      "logs": [
-        {"timestamp": "2025-01-01T00:00:00Z", "ip": "1.2.3.4", "method": "GET", "path": "/login", "status": 200},
-        {"timestamp": "2025-01-01T00:00:01Z", "ip": "1.2.3.4", "method": "GET", "path": "/login", "status": 200},
-        {"timestamp": "2025-01-01T00:00:02Z", "ip": "1.2.3.4", "method": "GET", "path": "/login", "status": 200}
-      ]
-    }
-    ```
-  - Response JSON ejemplo:
-    ```json
-    {"is_threat": true, "suggested_action": "block", "score": 0.7}
-    ```
+### **🏥 Salud y Información**
+- **GET** `/health` → `{ "status": "ok", "dataset": "IoT Anomaly Detection" }`
+- **GET** `/info` → Información del proyecto y tipos de dispositivos soportados
 
-- GET `/health` → `{ "status": "ok" }`
+### **🔍 Análisis de Anomalías**
+- **POST** `/analyze` - Análisis completo con pipeline de agentes
+- **POST** `/analyze/iot/direct` - Análisis directo solo con modelo ML
 
-### Ejemplos de requests (JSON) para POST `/analyze`
+### **🤖 Entrenamiento del Modelo**
+- **POST** `/train/iot` - Entrenamiento con datos personalizados
+- **POST** `/train/iot/kaggle` - Entrenamiento automático desde Kaggle
+
+### **📊 Gestión de Datasets**
+- **GET** `/dataset/info` - Información del dataset procesado
+- **GET** `/dataset/sample?size=N` - Muestra del dataset
+
+## 📱 Estructura de Datos IoT
+
+### **Campos Requeridos:**
 ```json
 {
-  "logs": [
-    {"timestamp": "2025-01-01T00:00:00Z", "ip": "10.0.0.1", "method": "GET", "path": "/", "status": 200, "response_time_ms": 12},
-    {"timestamp": "2025-01-01T00:00:01Z", "ip": "10.0.0.1", "method": "GET", "path": "/products", "status": 200, "response_time_ms": 25},
-    {"timestamp": "2025-01-01T00:00:02Z", "ip": "10.0.0.1", "method": "GET", "path": "/cart", "status": 200, "response_time_ms": 18}
-  ]
+  "timestamp": "2025-01-20 12:00:00",
+  "device_id": "thermostat_001",
+  "device_type": "thermostat",
+  "cpu_usage": 75.5,
+  "memory_usage": 60.2,
+  "network_in_kb": 150,
+  "network_out_kb": 300,
+  "packet_rate": 450,
+  "avg_response_time_ms": 250.0,
+  "service_access_count": 5,
+  "failed_auth_attempts": 2,
+  "is_encrypted": 1,
+  "geo_location_variation": 5.5
 }
 ```
 
+### **Tipos de Dispositivos Soportados:**
+- **thermostat**: Termostatos inteligentes
+- **smart**: Dispositivos inteligentes generales
+- **sensor**: Sensores de monitoreo
+- **camera**: Cámaras de seguridad
+- **lock**: Cerraduras inteligentes
+- **hub**: Hubs centrales
+- **appliance**: Electrodomésticos inteligentes
+- **wearable**: Dispositivos portátiles
+
+## 🧪 Ejemplos de Uso
+
+### **1. Entrenar el Modelo desde Kaggle**
+```bash
+curl -X POST http://localhost:8000/train/iot/kaggle
+```
+
+**Nota**: El dataset se divide automáticamente en:
+- **80% sin etiquetas**: Para entrenamiento no supervisado
+- **20% con etiquetas**: Para calibración y optimización de thresholds
+
+**Respuesta:**
 ```json
 {
-  "logs": [
-    {"timestamp": "2025-01-01T10:00:00Z", "ip": "203.0.113.5", "method": "POST", "path": "/login", "status": 401, "response_time_ms": 40},
-    {"timestamp": "2025-01-01T10:00:02Z", "ip": "203.0.113.5", "method": "POST", "path": "/login", "status": 401, "response_time_ms": 38},
-    {"timestamp": "2025-01-01T10:00:04Z", "ip": "203.0.113.5", "method": "POST", "path": "/login", "status": 401, "response_time_ms": 42}
-  ]
+  "status": "trained_from_kaggle",
+  "samples": 1589,
+  "model_path": "models/isoforest.joblib",
+  "features": 11
 }
 ```
 
+### **2. Analizar Dispositivos IoT**
+```bash
+curl -X POST "http://localhost:8000/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "logs": [{
+      "timestamp": "2025-01-20 12:00:00",
+      "device_id": "thermostat_001",
+      "device_type": "thermostat",
+      "cpu_usage": 75.5,
+      "memory_usage": 60.2,
+      "network_in_kb": 150,
+      "network_out_kb": 300,
+      "packet_rate": 450,
+      "avg_response_time_ms": 250.0,
+      "service_access_count": 5,
+      "failed_auth_attempts": 2,
+      "is_encrypted": 1,
+      "geo_location_variation": 5.5
+    }]
+  }'
+```
+
+**Respuesta:**
 ```json
 {
-  "logs": [
-    {"timestamp": "2025-01-02T09:00:00Z", "ip": "198.51.100.9", "method": "GET", "path": "/admin", "status": 404, "response_time_ms": 15},
-    {"timestamp": "2025-01-02T09:00:01Z", "ip": "198.51.100.9", "method": "GET", "path": "/.env", "status": 404, "response_time_ms": 14},
-    {"timestamp": "2025-01-02T09:00:02Z", "ip": "198.51.100.9", "method": "GET", "path": "/search?q=%27%20OR%201%3D1--", "status": 400, "response_time_ms": 20}
-  ]
+  "trace_id": "uuid-12345",
+  "score": 0.8234,
+  "decision": {
+    "trace_id": "uuid-12345",
+    "is_threat": true,
+    "confidence": 0.85,
+    "action_suggested": "alert",
+    "explanation": "Decision based on anomaly score=0.8234 for batch of 1 logs"
+  },
+  "batch_size": 1
 }
 ```
 
+### **3. Obtener Información del Dataset**
+```bash
+curl http://localhost:8000/dataset/info
+```
+
+**Respuesta:**
 ```json
 {
-  "logs": [
-    {"timestamp": "2025-01-03T12:00:00Z", "ip": "192.0.2.7", "method": "GET", "path": "/checkout", "status": 502, "response_time_ms": 120},
-    {"timestamp": "2025-01-03T12:00:02Z", "ip": "192.0.2.7", "method": "GET", "path": "/checkout", "status": 503, "response_time_ms": 200}
-  ]
+  "total_rows": 10000,
+  "labeled_rows": 1589,
+  "unlabeled_rows": 8411,
+  "columns": ["timestamp", "device_id", ...],
+  "label_distribution": {
+    "Normal": 1263,
+    "Anomaly_DoS": 109,
+    "Anomaly_Injection": 109,
+    "Anomaly_Spoofing": 108
+  },
+  "device_type_distribution": {...},
+  "anomaly_ratio": 0.205
 }
 ```
 
-```json
-{
-  "logs": [
-    {"timestamp": "2025-01-04T08:00:00Z", "ip": "203.0.113.55", "method": "GET", "path": "/api/v1/item?id=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "status": 200, "response_time_ms": 30}
-  ]
-}
+## 🔍 Detector ML (Isolation Forest Adaptado)
+
+- **Modelo**: `ml_isolation_forest_detector.py` adaptado para IoT
+- **Features**: 11 características numéricas de dispositivos IoT
+- **Transformaciones**: Logarítmicas para métricas de red, normalización de porcentajes
+- **Persistencia**: Se guarda en `models/isoforest.joblib` y se recarga automáticamente
+- **Score**: Rango [0,1] donde valores altos indican mayor anomalía
+- **Calibración Automática**: Usa datos etiquetados (20%) para optimizar thresholds
+
+### **Features del Modelo:**
+1. **device_type_idx**: Índice del tipo de dispositivo
+2. **cpu_norm**: CPU normalizado (0-1)
+3. **memory_norm**: Memoria normalizada (0-1)
+4. **log_network_in**: Log del tráfico de entrada
+5. **log_network_out**: Log del tráfico de salida
+6. **log_packet_rate**: Log de la tasa de paquetes
+7. **log_response_time**: Log del tiempo de respuesta
+8. **log_service_count**: Log del conteo de servicios
+9. **log_failed_auth**: Log de intentos fallidos de auth
+10. **is_encrypted**: Indicador de encriptación
+11. **geo_variation**: Variación de ubicación geográfica
+
+## 🎯 Pipeline de Agentes (LangGraph)
+
+El sistema incluye un pipeline de agentes inteligentes:
+
+1. **Agente de Ingestión**: Valida y sanitiza datos IoT
+2. **Agente de ML Scoring**: Ejecuta el modelo de detección
+3. **Agente de Decisión**: Sugiere acciones basadas en el score
+
+### **Acciones Sugeridas:**
+- **monitor**: Monitorear el dispositivo
+- **investigate**: Investigar más a fondo
+- **alert**: Enviar alerta de seguridad
+- **block**: Bloquear el dispositivo
+
+## 📊 Interpretación de Resultados
+
+### **Score de Anomalía (0-1):**
+- **0.0 - 0.3**: Comportamiento normal ✅
+- **0.3 - 0.6**: Comportamiento sospechoso ⚠️
+- **0.6 - 0.8**: Posible anomalía 🚨
+- **0.8 - 1.0**: Anomalía detectada 🚨🚨
+
+### **Calibración Automática:**
+El sistema optimiza automáticamente el threshold usando datos etiquetados:
+- **Threshold inicial**: 0.5 (configurable)
+- **Threshold optimizado**: Se calcula automáticamente para maximizar F1-Score
+- **Métricas**: Precisión, Recall y F1-Score se calculan durante la calibración
+
+### **Casos de Uso:**
+- **Monitoreo en Tiempo Real**: Análisis continuo de métricas IoT
+- **Análisis de Seguridad**: Identificación de ataques DoS, Injection, Spoofing
+- **Mantenimiento Predictivo**: Detección de degradación de rendimiento
+- **Auditoría de Red**: Análisis de patrones de tráfico anómalos
+
+## 🔧 Configuración Avanzada
+
+### **Logs de la API:**
+Los logs se muestran en la consola donde se ejecuta la API.
+
+### **Persistencia del Modelo:**
+El modelo entrenado se guarda automáticamente y se recarga en cada reinicio.
+
+## 🧪 Pruebas
+
+### **Pruebas Manuales:**
+```bash
+# Verificar estado
+curl http://localhost:8000/health
+
+# Obtener información
+curl http://localhost:8000/info
+
+# Entrenar modelo
+curl -X POST http://localhost:8000/train/iot/kaggle
+
+# Analizar datos
+curl -X POST "http://localhost:8000/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "logs": [{
+      "timestamp": "2025-01-20 12:00:00",
+      "device_id": "thermostat_001",
+      "device_type": "thermostat",
+      "cpu_usage": 75.5,
+      "memory_usage": 60.2,
+      "network_in_kb": 150,
+      "network_out_kb": 300,
+      "packet_rate": 450,
+      "avg_response_time_ms": 250.0,
+      "service_access_count": 5,
+      "failed_auth_attempts": 2,
+      "is_encrypted": 1,
+      "geo_location_variation": 5.5
+    }]
+  }'
 ```
 
-## Detector ML (Isolation Forest)
-- El sistema usa `ml_isolation_forest_detector.py`.
-- Si existe `models/isoforest.joblib`, lo carga; si no, se entrena automáticamente (en `/train/kaggle` o `/train`).
-- Feature engineering mínima: IP descompuesta, método, longitud de path, flag de query, log(status), longitud de user agent, log(response_time_ms).
-- El endpoint `/analyze` devuelve `score` en [0,1] (máximo del lote) y `is_threat` según umbral (0.7 por defecto).
+## 📚 Recursos Adicionales
 
-## Notas de diseño
-- Capa `domain`: contratos y entidades puras (sin dependencias externas).
-- Capa `application`: casos de uso orquestan puertos del dominio.
-- Capa `infrastructure`: implementaciones concretas (adaptadores) de puertos.
-- Capa `presentation`: framework FastAPI y capa HTTP.
+- **Dataset Original**: [Kaggle - IoT Anomaly Detection](https://www.kaggle.com/datasets/ziya07/anomaly-detection-and-threat-intelligence-dataset)
+- **Notebook de EDA**: [02_EDA_IoT_Anomaly_Detection.ipynb](notebooks/02_EDA_IoT_Anomaly_Detection.ipynb)
 
-## Próximos pasos
-- Validación robusta con Pydantic (límites de tamaño, timeouts, tipos estrictos).
-- Calibración de umbral/contamination con un 10% etiquetado (F1/PR-curve).
-- Persistencia de eventos y métricas (DB/OLAP) y dashboard.
-- Streaming (Kafka/Kinesis) y ventanas por IP/usuario.
-- Explainability (SHAP/feature importances) y alerting.
-- Seguridad: auth (API key/JWT), CORS restrictivo, rate limiting.
-- Observabilidad: Prometheus, OpenTelemetry.
-- Docker/compose y CI.
-- Logging estructurado y trazabilidad.
+## 🏗️ Notas de Diseño
+
+- **Capa `domain`**: Contratos y entidades puras (sin dependencias externas)
+- **Capa `application`**: Casos de uso que orquestan puertos del dominio
+- **Capa `infrastructure`**: Implementaciones concretas (adaptadores) de puertos
+- **Capa `orchestration`**: Pipeline de agentes LangGraph para análisis inteligente
+- **Capa `presentation`**: Framework FastAPI y capa HTTP
+
+
+## 📄 Licencia
+
+Este proyecto está bajo la licencia especificada en el archivo [LICENSE](LICENSE).
