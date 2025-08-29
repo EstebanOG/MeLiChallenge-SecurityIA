@@ -64,43 +64,62 @@ class IsolationForestDetector(AnomalyDetector):
     def _encode_logs(self, logs: List[LogEntry]) -> np.ndarray:
         """Transform LogEntry list into numeric feature matrix.
 
-        Minimal featurization to keep dependencies small and inference fast.
+        Adapted for IoT/smart systems dataset with device metrics.
         """
-        methods = {"GET": 0, "POST": 1, "PUT": 2, "DELETE": 3, "PATCH": 4, "HEAD": 5, "OPTIONS": 6}
-
-        def ip_to_nums(ip: str) -> List[float]:
-            try:
-                parts = [float(p) for p in ip.split(".")]
-                if len(parts) == 4:
-                    return parts
-            except Exception:
-                pass
-            return [0.0, 0.0, 0.0, 0.0]
+        # Mapeo de tipos de dispositivo a números
+        device_types = {
+            "thermostat": 0, "smart": 1, "sensor": 2, "camera": 3, 
+            "lock": 4, "hub": 5, "appliance": 6, "wearable": 7
+        }
 
         X: List[List[float]] = []
         for entry in logs:
-            ip_nums = ip_to_nums(entry.ip)
-            method_idx = float(methods.get(entry.method.upper(), -1))
-            path_len = float(len(entry.path))
-            has_query = 1.0 if ("?" in entry.path) else 0.0
-            status = float(entry.status)
-            ua_len = float(len(entry.user_agent)) if entry.user_agent else 0.0
-            resp_ms = float(entry.response_time_ms) if entry.response_time_ms is not None else -1.0
-            # Basic transformations
-            log_status = math.log1p(status)
-            log_resp = math.log1p(resp_ms) if resp_ms >= 0 else 0.0
+            # Tipo de dispositivo
+            device_type_idx = float(device_types.get(entry.device_type.lower(), -1))
+            
+            # Métricas de rendimiento
+            cpu_usage = float(entry.cpu_usage)
+            memory_usage = float(entry.memory_usage)
+            
+            # Métricas de red
+            network_in = float(entry.network_in_kb)
+            network_out = float(entry.network_out_kb)
+            packet_rate = float(entry.packet_rate)
+            
+            # Métricas de respuesta
+            response_time = float(entry.avg_response_time_ms)
+            service_count = float(entry.service_access_count)
+            
+            # Métricas de seguridad
+            failed_auth = float(entry.failed_auth_attempts)
+            is_encrypted = float(entry.is_encrypted)
+            geo_variation = float(entry.geo_location_variation)
+            
+            # Transformaciones logarítmicas para valores que pueden ser muy grandes
+            log_network_in = math.log1p(network_in)
+            log_network_out = math.log1p(network_out)
+            log_packet_rate = math.log1p(packet_rate)
+            log_response_time = math.log1p(response_time) if response_time >= 0 else 0.0
+            log_service_count = math.log1p(service_count)
+            log_failed_auth = math.log1p(failed_auth + 1)  # +1 para evitar log(0)
+            
+            # Normalización de porcentajes (CPU y memoria ya están en 0-100)
+            cpu_norm = cpu_usage / 100.0
+            memory_norm = memory_usage / 100.0
 
-            X.append(
-                [
-                    *ip_nums,           # 4
-                    method_idx,         # 1
-                    path_len,           # 1
-                    has_query,          # 1
-                    log_status,         # 1
-                    ua_len,             # 1
-                    log_resp,           # 1
-                ]
-            )
+            X.append([
+                device_type_idx,      # 1 - Tipo de dispositivo
+                cpu_norm,             # 1 - CPU normalizado (0-1)
+                memory_norm,          # 1 - Memoria normalizada (0-1)
+                log_network_in,       # 1 - Log de tráfico de entrada
+                log_network_out,      # 1 - Log de tráfico de salida
+                log_packet_rate,      # 1 - Log de tasa de paquetes
+                log_response_time,    # 1 - Log de tiempo de respuesta
+                log_service_count,    # 1 - Log de conteo de servicios
+                log_failed_auth,      # 1 - Log de intentos fallidos de autenticación
+                is_encrypted,         # 1 - Indicador de encriptación
+                geo_variation,        # 1 - Variación de ubicación geográfica
+            ])
 
         return np.asarray(X, dtype=float)
 

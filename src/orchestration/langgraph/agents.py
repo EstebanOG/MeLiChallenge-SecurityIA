@@ -15,10 +15,13 @@ class IngestionOutput(TypedDict):
 def ingestion_agent(logs: List[Dict[str, Any]], trace_id: str) -> IngestionOutput:
     """Very basic ingestion step: validate minimal keys and echo back.
 
-    - Ensures required keys are present per existing `LogEntry` shape
+    - Ensures required keys are present per existing `LogEntry` shape for IoT dataset
     - Attaches timestamps and trace_id
     """
-    required = {"timestamp", "ip", "method", "path", "status"}
+    required = {"timestamp", "device_id", "device_type", "cpu_usage", "memory_usage", 
+                "network_in_kb", "network_out_kb", "packet_rate", "avg_response_time_ms", 
+                "service_access_count", "failed_auth_attempts", "is_encrypted", "geo_location_variation"}
+    
     sanitized: List[Dict[str, Any]] = []
     for item in logs:
         if not required.issubset(item.keys()):
@@ -26,12 +29,19 @@ def ingestion_agent(logs: List[Dict[str, Any]], trace_id: str) -> IngestionOutpu
             continue
         sanitized.append({
             "timestamp": str(item["timestamp"]),
-            "ip": str(item["ip"]),
-            "method": str(item["method"]).upper(),
-            "path": str(item["path"]),
-            "status": int(item["status"]),
-            "user_agent": item.get("user_agent"),
-            "response_time_ms": item.get("response_time_ms"),
+            "device_id": str(item["device_id"]),
+            "device_type": str(item["device_type"]),
+            "cpu_usage": float(item["cpu_usage"]),
+            "memory_usage": float(item["memory_usage"]),
+            "network_in_kb": int(item["network_in_kb"]),
+            "network_out_kb": int(item["network_out_kb"]),
+            "packet_rate": int(item["packet_rate"]),
+            "avg_response_time_ms": float(item["avg_response_time_ms"]),
+            "service_access_count": int(item["service_access_count"]),
+            "failed_auth_attempts": int(item["failed_auth_attempts"]),
+            "is_encrypted": int(item["is_encrypted"]),
+            "geo_location_variation": float(item["geo_location_variation"]),
+            "label": item.get("label"),  # Campo opcional
         })
 
     return {
