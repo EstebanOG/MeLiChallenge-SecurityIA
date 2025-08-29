@@ -6,6 +6,7 @@ from ...infrastructure.detectors.ml_isolation_forest_detector import IsolationFo
 from ...infrastructure.services.kaggle_service import download_and_extract_dataset
 from ...infrastructure.services.csic_parser import parse_csic_files
 from ...application.use_cases.analyze_logs import AnalyzeLogsUseCase
+from ...orchestration.langgraph.graph import run_agents_pipeline
 
 
 router = APIRouter()
@@ -55,6 +56,20 @@ def analyze_batch(req: AnalyzeRequest):
     use_case = AnalyzeLogsUseCase(detector=detector)
     result = use_case.execute(logs)
     return result
+
+
+class AgentAnalyzeResponse(BaseModel):
+    trace_id: str
+    score: float
+    decision: dict
+
+
+@router.post("/analyze/agents", response_model=AgentAnalyzeResponse)
+def analyze_with_agents(req: AnalyzeRequest):
+    # Keep request schema compatible, run through langgraph mini-pipeline
+    raw_logs = [item.model_dump() for item in req.logs]
+    outcome = run_agents_pipeline(raw_logs)
+    return outcome
 
 
 @router.post("/train")
