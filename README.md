@@ -114,6 +114,10 @@ La API estará disponible en: `http://localhost:8000`
 curl -X POST http://localhost:8000/train/iot/kaggle
 ```
 
+**Nota**: El dataset se divide automáticamente en:
+- **80% sin etiquetas**: Para entrenamiento no supervisado
+- **20% con etiquetas**: Para calibración y optimización de thresholds
+
 **Respuesta:**
 ```json
 {
@@ -193,6 +197,7 @@ curl http://localhost:8000/dataset/info
 - **Transformaciones**: Logarítmicas para métricas de red, normalización de porcentajes
 - **Persistencia**: Se guarda en `models/isoforest.joblib` y se recarga automáticamente
 - **Score**: Rango [0,1] donde valores altos indican mayor anomalía
+- **Calibración Automática**: Usa datos etiquetados (20%) para optimizar thresholds
 
 ### **Features del Modelo:**
 1. **device_type_idx**: Índice del tipo de dispositivo
@@ -228,6 +233,12 @@ El sistema incluye un pipeline de agentes inteligentes:
 - **0.3 - 0.6**: Comportamiento sospechoso ⚠️
 - **0.6 - 0.8**: Posible anomalía 🚨
 - **0.8 - 1.0**: Anomalía detectada 🚨🚨
+
+### **Calibración Automática:**
+El sistema optimiza automáticamente el threshold usando datos etiquetados:
+- **Threshold inicial**: 0.5 (configurable)
+- **Threshold optimizado**: Se calcula automáticamente para maximizar F1-Score
+- **Métricas**: Precisión, Recall y F1-Score se calculan durante la calibración
 
 ### **Casos de Uso:**
 - **Monitoreo en Tiempo Real**: Análisis continuo de métricas IoT
