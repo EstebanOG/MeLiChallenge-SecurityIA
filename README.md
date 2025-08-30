@@ -1,6 +1,10 @@
 # 🔍 MeLiChallenge-SecurityIA: IoT Anomaly Detection API
 
-API FastAPI con Clean Architecture para detección de anomalías en dispositivos IoT y sistemas inteligentes.
+API FastAPI para detección de anomalías en dispositivos IoT y sistemas inteligentes.
+
+## **SOLUCIÓN AL RETO DE MELI - DETECCIÓN INTELIGENTE DE AMENAZAS**
+
+Este proyecto representa mi solución al **Reto de Desarrollo y Seguridad de Mercado Libre (MELI)**, que busca implementar un módulo backend utilizando modelos de Inteligencia Artificial para la detección inteligente de comportamientos anómalos en registros de acceso. El desafío requiere conocimientos en redes, infraestructura, desarrollo de soluciones, IA y bases de datos, implementando una canalización de detección de anomalías con agentes inteligentes que procesen registros y sugieran acciones de seguridad como bloquear, alertar u otra.
 
 ## **Dataset de IoT Anomaly Detection**
 
