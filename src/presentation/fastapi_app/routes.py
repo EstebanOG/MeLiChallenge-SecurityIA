@@ -3,17 +3,15 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from ...domain.entities.log_entry import LogEntry
 from ...infrastructure.detectors.ml_isolation_forest_detector import IsolationForestDetector
-from ...infrastructure.services.iot_dataset_service import (
-    download_iot_dataset, 
-    load_iot_dataset, 
-    split_dataset, 
-    save_processed_datasets
-)
+from ...infrastructure.services.iot_dataset_service import IoTDatasetService
 from ...orchestration.langgraph.graph import run_agents_pipeline
 import pandas as pd
 from pathlib import Path
 
 router = APIRouter()
+
+# Instancia del servicio de datasets
+iot_service = IoTDatasetService()
 
 # ============================================================================
 # MODELOS DE DATOS PARA IoT
@@ -47,7 +45,7 @@ class IoTAnalyzeResponse(BaseModel):
 class TrainResponse(BaseModel):
     status: str
     samples: int
-    model_path: str
+    file_path: str  # Cambiado de model_file_path para evitar conflicto con Pydantic
     features: int
 
 class DatasetInfo(BaseModel):
@@ -162,7 +160,7 @@ def train_iot_model(req: IoTAnalyzeRequest):
         return TrainResponse(
             status="trained",
             samples=len(logs),
-            model_path="models/isoforest.joblib",
+            file_path="models/isoforest.joblib",
             features=11  # Número de features del modelo IoT
         )
         
@@ -180,19 +178,19 @@ def train_iot_model_from_kaggle():
     try:
         # Descargar dataset
         print("📥 Descargando dataset de IoT desde Kaggle...")
-        dataset_path = download_iot_dataset()
+        dataset_path = iot_service.download_dataset()
         
         # Cargar datos
         print("📊 Cargando dataset...")
-        df = load_iot_dataset(dataset_path)
+        df = iot_service.load_dataset(dataset_path)
         
         # Split del dataset
         print("✂️ Dividiendo dataset...")
-        labeled_df, unlabeled_df = split_dataset(df, labeled_ratio=0.2)
+        labeled_df, unlabeled_df = iot_service.split_dataset(df, labeled_ratio=0.2)
         
         # Guardar datasets procesados
         print("💾 Guardando datasets procesados...")
-        save_processed_datasets(labeled_df, unlabeled_df)
+        iot_service.save_datasets(labeled_df, unlabeled_df)
         
         # Convertir a LogEntry para entrenamiento
         print("🤖 Entrenando modelo...")
@@ -226,7 +224,7 @@ def train_iot_model_from_kaggle():
         return TrainResponse(
             status="trained_from_kaggle",
             samples=len(logs),
-            model_path="models/isoforest.joblib",
+            file_path="models/isoforest.joblib",
             features=11
         )
         
