@@ -51,9 +51,9 @@ def _node_ml_scoring(state: PipelineState) -> PipelineState:
         )
         for item in ingestion["logs"]
     ]
-    result = detector.analyze(log_entries)
-    state["batch_score"] = float(result.get("score", 0.0))
-    state["batch_is_threat"] = bool(result.get("is_threat", False))
+    result = detector.detect_anomalies(log_entries)
+    state["batch_score"] = float(result.get("batch_score", 0.0))
+    state["batch_is_threat"] = bool(result.get("threat_detected", False))
     return state
 
 
