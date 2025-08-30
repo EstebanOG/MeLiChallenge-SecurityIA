@@ -503,6 +503,28 @@ curl -X POST "http://localhost:8000/analyze" \
 - **Capa `orchestration`**: Pipeline de agentes LangGraph para análisis inteligente
 - **Capa `presentation`**: Framework FastAPI y capa HTTP
 
+
+---
+
+## 📸 **IMÁGENES DE LA APLICACIÓN FUNCIONANDO**
+
+### **🎯 Capturas de Pantalla de la Aplicación en Acción**
+
+> **Nota**: Las siguientes imágenes muestran la aplicación procesando datos, respondiendo a solicitudes y generando resultados esperados.
+
+#### **🖥️ Interfaz Principal**
+![Interfaz Principal](docs/images/main-interface.png)
+*Vista principal de la aplicación FastAPI con endpoints disponibles*
+
+#### **📊 Análisis de Datos IoT**
+![Análisis IoT](docs/images/iot-analysis.png)
+*Procesamiento de logs IoT y detección de anomalías en tiempo real*
+
+#### **📋 Logs y Debugging**
+![Logs](docs/images/application-logs.png)
+*Logs de la aplicación mostrando el procesamiento de requests*
+
+---
 ## 📄 Licencia
 
 Este proyecto está bajo la licencia especificada en el archivo [LICENSE](LICENSE).
