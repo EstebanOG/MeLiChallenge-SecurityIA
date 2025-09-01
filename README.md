@@ -497,7 +497,7 @@ curl -X POST "http://localhost:8000/analyze" \
 ## 📚 Recursos Adicionales
 
 - **Dataset Original**: [Kaggle - IoT Anomaly Detection](https://www.kaggle.com/datasets/ziya07/anomaly-detection-and-threat-intelligence-dataset)
-- **Notebook de EDA**: [02_EDA_IoT_Anomaly_Detection.ipynb](notebooks/02_EDA_IoT_Anomaly_Detection.ipynb)
+- **Notebook de EDA**: [02_EDA_IoT_Anomaly_Detection.ipynb](notebooks/EDA_IoT_Anomaly_Detection.ipynb)
 
 ## 🏗️ Notas de Diseño
 
