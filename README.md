@@ -1,6 +1,10 @@
 # 🔍 MeLiChallenge-SecurityIA: IoT Anomaly Detection API
 
-API FastAPI con Clean Architecture para detección de anomalías en dispositivos IoT y sistemas inteligentes.
+API FastAPI para detección de anomalías en dispositivos IoT y sistemas inteligentes.
+
+## **SOLUCIÓN AL RETO DE MELI - DETECCIÓN INTELIGENTE DE AMENAZAS**
+
+Este proyecto representa mi solución al **Reto de Desarrollo y Seguridad de Mercado Libre (MELI)**, que busca implementar un módulo backend utilizando modelos de Inteligencia Artificial para la detección inteligente de comportamientos anómalos en registros de acceso. El desafío requiere conocimientos en redes, infraestructura, desarrollo de soluciones, IA y bases de datos, implementando una canalización de detección de anomalías con agentes inteligentes que procesen registros y sugieran acciones de seguridad como bloquear, alertar u otra.
 
 ## **Dataset de IoT Anomaly Detection**
 
@@ -11,6 +15,62 @@ Este proyecto ha sido adaptado para trabajar con el dataset **"Anomaly Detection
 - **4 clases**: Normal, Anomaly_DoS, Anomaly_Injection, Anomaly_Spoofing
 - **8 tipos de dispositivos**: thermostat, smart, sensor, camera, lock, hub, appliance, wearable
 - **Métricas de rendimiento**: CPU, memoria, red, autenticación, ubicación geográfica
+
+## **Análisis de Amenazas: STRIDE + MITRE ATT&CK**
+
+Se realizó un **modelado de amenazas** aplicando frameworks de ciberseguridad estándar de la industria:
+
+- **STRIDE**: Para categorización conceptual de amenazas
+- **MITRE ATT&CK**: Para mapeo a técnicas reales de atacantes
+- **IoC**: Indicadores de compromiso calculables del dataset
+
+### Resultados Clave
+
+- **9 amenazas mapeadas** a técnicas MITRE ATT&CK específicas
+- **8 técnicas** identificadas (T1110, T1040, T1041, T1499, T1496, T1055, T1078, T1087)
+
+### Matriz de Amenazas
+
+| Feature (Dataset) | STRIDE (Categoría) | Amenaza Detectada | MITRE ATT&CK (Técnica) | IoC Propuesto | Estadísticas del Feature |
+|-------------------|-------------------|-------------------|------------------------|---------------|--------------------------|
+| `failed_auth_attempts` | **Spoofing** | Credential Stuffing / Brute Force | **T1110 - Brute Force** | >5 intentos en <1 min por dispositivo | **Min:** 0.00, **Max:** 10.00, **P95:** 10.00 |
+| `is_encrypted` | **Information Disclosure** | Tráfico sin cifrar interceptado | **T1040 - Network Sniffing** | is_encrypted = 0 + tráfico > umbral | **Min:** 0.00, **Max:** 1.00, **P95:** 1.00 |
+| `network_out_kb` | **Information Disclosure** | Exfiltración de datos | **T1041 - Exfiltration Over C2** | valores outlier sobre p95 | **Min:** 10.00, **Max:** 1499.00, **P95:** 1425.00 |
+| `packet_rate` | **Denial of Service** | Denegación de servicio por ráfaga de paquetes | **T1499 - Endpoint DoS** | >1000 pkt/s o outlier | **Min:** 5.00, **Max:** 999.00, **P95:** 947.00 |
+| `cpu_usage` | **Tampering** | Uso abusivo de recursos / Cryptojacking | **T1496 - Resource Hijacking** | rolling average >80% sostenido | **Min:** 10.01, **Max:** 89.99, **P95:** 86.38 |
+| `memory_usage` | **Tampering** | Exploitation / consumo excesivo de memoria | **T1055 - Process Injection** | rolling average >90% | **Min:** 10.03, **Max:** 84.99, **P95:** 81.21 |
+| `geo_location_variation` | **Spoofing** | Account Takeover / Impossible Travel | **T1078 - Valid Accounts** | variación > 15% | **Min:** 0.00, **Max:** 20.00, **P95:** 19.03 |
+| `service_access_count` | **Tampering / Recon** | Enumeración de servicios | **T1087 - Account Discovery** | outlier sobre p95 | **Min:** 1.00, **Max:** 9.00, **P95:** 9.00 |
+| `avg_response_time_ms` | **Denial of Service** | Degradación de servicio / DoS | **T1499 - Endpoint DoS** | valores sobre p95 | **Min:** 20.08, **Max:** 499.95, **P95:** 476.42 |
+
+
+
+### Detección de Amenazas con IoCs
+
+#### Metodología
+
+Implementamos **Indicadores de Compromiso (IoC)** basados en las reglas de amenazas identificadas:
+
+- **Detección de Fuerza Bruta**: >5 intentos fallidos en <1 min
+- **Detección de Exfiltración**: Valores outlier sobre percentil 95
+- **Detección de DoS**: >1000 pkt/s o valores anómalos
+- **Detección de Abuso de Recursos**: CPU >80% sostenido
+
+#### Rendimiento de IoCs
+
+- **Precisión**: 20.0% (muchos falsos positivos)
+- **Recall**: 39.5% (detecta ~40% de amenazas reales)
+- **F1-Score**: 26.6% (necesita mejora)
+
+#### Análisis por Tipo de Amenaza
+
+- **Anomaly_DoS**: 39.5% detectado
+- **Anomaly_Spoofing**: 40.7% detectado  
+- **Anomaly_Injection**: 38.5% detectado
+
+**[Ver análisis completo y métricas detalladas](notebooks/Threat_Model.ipynb)**
+
+---
 
 ## 🏗️ **CLEAN ARCHITECTURE - IMPLEMENTACIÓN VALIDADA**
 
@@ -493,7 +553,7 @@ curl -X POST "http://localhost:8000/analyze" \
 ## 📚 Recursos Adicionales
 
 - **Dataset Original**: [Kaggle - IoT Anomaly Detection](https://www.kaggle.com/datasets/ziya07/anomaly-detection-and-threat-intelligence-dataset)
-- **Notebook de EDA**: [02_EDA_IoT_Anomaly_Detection.ipynb](notebooks/02_EDA_IoT_Anomaly_Detection.ipynb)
+- **Notebook de EDA**: [02_EDA_IoT_Anomaly_Detection.ipynb](notebooks/EDA_IoT_Anomaly_Detection.ipynb)
 
 ## 🏗️ Notas de Diseño
 
