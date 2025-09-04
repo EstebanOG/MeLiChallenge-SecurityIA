@@ -1,4 +1,4 @@
-from src.presentation.fastapi_app import create_app
+from src.frameworks.web import create_app
 
 
 app = create_app()
