@@ -85,146 +85,61 @@ Implementamos **Indicadores de Compromiso (IoC)** basados en las reglas de amena
 
 **[Ver análisis completo y métricas detalladas](notebooks/Threat_Model.ipynb)**
 
----
 
-## 🏗️ **CLEAN ARCHITECTURE - IMPLEMENTACIÓN VALIDADA**
 
-Este proyecto implementa **excelentemente** los principios de Clean Architecture de Robert C. Martin, con separación clara de capas y dependencias que apuntan hacia adentro.
+## **ARQUITECTURA DEL PROYECTO**
 
-### **📐 PRINCIPIOS IMPLEMENTADOS:**
+Este proyecto implementa **Clean Architecture**, con cuatro capas y dependencias que apuntan hacia adentro.
 
-✅ **Dependencias apuntan hacia adentro** - Solo las capas externas dependen de las internas  
-✅ **Inversión de dependencias** - Las capas internas definen interfaces, las externas las implementan  
-✅ **Separación de responsabilidades** - Cada capa tiene una responsabilidad única y bien definida  
-✅ **Entidades puras** - El dominio no tiene dependencias externas  
-✅ **Casos de uso orquestadores** - La aplicación coordina sin conocer detalles técnicos  
+### **Principios fundamentales**
 
-### **🏛️ DIAGRAMA DE ARQUITECTURA:**
+-  **Dependencias apuntan hacia adentro**: Solo las capas externas dependen de las internas  
+- **Inversión de dependencias**: Las capas internas definen interfaces, las externas las implementan  
+- **Entidades independientes**:  El centro no conoce nada del exterior  
+- **Casos de uso aislados**: La aplicación no conoce detalles de frameworks  
+- **Interface Adapters**: Adaptadores conectan el interior con el exterior  
+- **Frameworks externos**: Detalles técnicos en la capa más externa 
+
+### **Diagrama de arquitectura**
 
 ```mermaid
 graph TB
     %% Definición de estilos
-    classDef presentationLayer fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    classDef applicationLayer fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef domainLayer fill:#e8f5e8,stroke:#1b5e20,stroke-width:3px
-    classDef infrastructureLayer fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef orchestrationLayer fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef entitiesLayer fill:#e8f5e8,stroke:#1b5e20,stroke-width:3px,color:#1b5e20
+    classDef useCasesLayer fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#4a148c
+    classDef adaptersLayer fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#01579b
+    classDef frameworksLayer fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#e65100
     
-    %% Capa de Presentación
-    subgraph PRESENTATION ["🌐 PRESENTATION LAYER"]
-        A[FastAPI Routes<br/>HTTP Controllers]
-        A1[analyze endpoint]
-        A2[train iot endpoint]
-        A3[health endpoint]
-        A4[info endpoint]
+    %% Capa de Entidades
+    subgraph ENTITIES ["ENTITIES"]
+        E[Entidades de Negocio<br/>LogEntry, AnomalyResult<br/>DatasetConfig, DeviceType]
     end
     
-    %% Capa de Aplicación
-    subgraph APPLICATION ["🔄 APPLICATION LAYER"]
-        B[Use Cases<br/>Casos de Uso]
-        B1[AnalyzeLogsUseCase]
-        B2[TrainModelUseCase]
-        B3[DatasetManagementUseCase]
+    %% Capa de Casos de Uso
+    subgraph USECASES ["USE CASES"]
+        U[Casos de Uso<br/>AnalyzeLogs, TrainModel<br/>GetDatasetInfo, ExecutePipeline]
     end
     
-    %% Capa de Dominio
-    subgraph DOMAIN ["🎯 DOMAIN LAYER"]
-        C[Entities<br/>Entidades]
-        C1[LogEntry]
-        C2[AnomalyResult]
-        C3[DeviceType]
-        
-        D[Interfaces<br/>Puertos]
-        D1[AnomalyDetector]
-        D2[DatasetService]
-        D3[TrainingService]
+    %% Capa de Adaptadores
+    subgraph ADAPTERS ["INTERFACE ADAPTERS"]
+        A[Adaptadores<br/>Controllers, Presenters<br/>Gateways, Repositories]
     end
     
-    %% Capa de Infraestructura
-    subgraph INFRASTRUCTURE ["🔌 INFRASTRUCTURE LAYER"]
-        E[Detectors<br/>Implementaciones]
-        E1[IsolationForestDetector]
-        E2[LOFDetector<br/>futuro]
-        E3[AutoEncoderDetector<br/>futuro]
-        
-        F[Services<br/>Servicios]
-        F1[IoTDatasetService]
-        F2[KaggleService]
-        F3[ModelPersistenceService]
-    end
-    
-    %% Capa de Orquestación
-    subgraph ORCHESTRATION ["🎭 ORCHESTRATION LAYER"]
-        G[LangGraph Pipeline<br/>Agentes Inteligentes]
-        G1[Ingestion Agent]
-        G2[ML Scoring Agent]
-        G3[Decision Agent]
+    %% Capa de Frameworks
+    subgraph FRAMEWORKS ["FRAMEWORKS & DRIVERS"]
+        F[Frameworks<br/>FastAPI, ML Libraries<br/>External APIs, Database]
     end
     
     %% Flujo de dependencias
-    A --> B
-    B --> D
-    E --> D
-    G --> E
+    F -->|"depende de"| A
+    A -->|"depende de"| U
+    U -->|"depende de"| E
     
     %% Aplicar estilos
-    class A,A1,A2,A3,A4 presentationLayer
-    class B,B1,B2,B3 applicationLayer
-    class C,C1,C2,C3,D,D1,D2,D3 domainLayer
-    class E,E1,E2,E3,F,F1,F2,F3 infrastructureLayer
-    class G,G1,G2,G3 orchestrationLayer
-```
-
-### **🔒 FLUJO DE DEPENDENCIAS:**
-
-```mermaid
-flowchart LR
-    subgraph FLOW ["Flujo de Dependencias"]
-        P[🌐 Presentation] --> A[🔄 Application]
-        A --> D[🎯 Domain]
-        I[🔌 Infrastructure] --> D
-        O[🎭 Orchestration] --> I
-    end
-    
-    P -.->|"depende de"| A
-    A -.->|"depende de"| D
-    I -.->|"implementa"| D
-    O -.->|"usa"| I
-    
-    classDef flowStyle fill:#f0f8ff,stroke:#4169e1,stroke-width:2px
-    class P,A,D,I,O flowStyle
-```
-
-### **📁 ESTRUCTURA DE ARCHIVOS:**
-
-```
-src/
-├── 🎯 domain/                    # 🟢 NÚCLEO (sin dependencias externas)
-│   ├── entities/
-│   │   └── log_entry.py         # Entidad IoT pura (dataclass)
-│   └── interfaces/
-│       └── anomaly_detector.py  # Puerto: contrato abstracto
-│
-├── 🔄 application/               # 🟡 CASOS DE USO (orquestadores)
-│   └── use_cases/
-│       └── analyze_logs.py      # Lógica de negocio que coordina puertos
-│
-├── 🔌 infrastructure/            # 🔴 IMPLEMENTACIONES (adaptadores)
-│   ├── detectors/
-│   │   └── ml_isolation_forest_detector.py  # Implementa AnomalyDetector
-│   └── services/
-│       ├── iot_dataset_service.py            # Servicio para dataset IoT
-│       └── kaggle_service.py                # Descarga dataset (kagglehub)
-│
-├── 🎭 orchestration/             # 🟠 PIPELINE DE AGENTES
-│   └── langgraph/
-│       ├── agents.py             # Agentes de ingestión y decisión
-│       └── graph.py              # Pipeline de agentes LangGraph
-│
-└── 🌐 presentation/              # 🔵 CAPA HTTP (FastAPI)
-    └── fastapi_app/
-        ├── __init__.py           # App factory FastAPI
-        └── routes.py             # Controllers HTTP adaptados para IoT
+    class E entitiesLayer
+    class U useCasesLayer
+    class A adaptersLayer
+    class F frameworksLayer
 ```
 
 ### **🤖 PIPELINE DE AGENTES LANGGRAPH:**
