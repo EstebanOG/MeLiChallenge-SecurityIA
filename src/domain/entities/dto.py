@@ -92,7 +92,6 @@ class InfoResponseDTO(BaseModel):
     version: str
     description: str
     features: List[str]
-    supported_device_types: List[str]
 
 
 # ============================================================================
@@ -106,3 +105,4 @@ class ErrorResponseDTO:
     message: str
     details: Optional[Dict[str, Any]] = None
     trace_id: Optional[str] = None
+
