@@ -1,19 +1,19 @@
 """
-Controlador para endpoints de análisis de logs IoT.
+Controlador para endpoints de análisis de logs de threat intelligence.
 
 Este controlador maneja los endpoints relacionados con el análisis
-de logs de dispositivos IoT para detectar anomalías.
+de logs de sesiones de red para detectar amenazas.
 """
 
 from fastapi import APIRouter, HTTPException
-from ...domain.entities.dto import IoTAnalyzeRequestDTO, IoTAnalyzeResponseDTO
-from ...application.use_cases.analyze_iot_logs import AnalyzeIoTLogsUseCase
+from ...domain.entities.dto import ThreatAnalyzeRequestDTO, ThreatAnalyzeResponseDTO
+from ...application.use_cases.analyze_logs import AnalyzeThreatLogsUseCase
 
 
 class AnalysisController:
-    """Controlador para análisis de logs IoT."""
+    """Controlador para análisis de logs de threat intelligence."""
     
-    def __init__(self, analyze_use_case: AnalyzeIoTLogsUseCase):
+    def __init__(self, analyze_use_case: AnalyzeThreatLogsUseCase):
         self.analyze_use_case = analyze_use_case
         self.router = APIRouter()
         self._setup_routes()
@@ -21,13 +21,13 @@ class AnalysisController:
     def _setup_routes(self):
         """Configura las rutas del controlador."""
         
-        @self.router.post("/analyze", response_model=IoTAnalyzeResponseDTO)
-        def analyze_iot_batch(req: IoTAnalyzeRequestDTO):
+        @self.router.post("/analyze", response_model=ThreatAnalyzeResponseDTO)
+        def analyze_threat_batch(req: ThreatAnalyzeRequestDTO):
             """
-            Analiza un lote de logs de dispositivos IoT para detectar anomalías.
+            Analiza un lote de logs de threat intelligence para detectar amenazas.
             
             Args:
-                req: Lista de logs de dispositivos IoT
+                req: Lista de logs de sesiones de red
                 
             Returns:
                 Resultado del análisis con score y decisión

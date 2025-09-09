@@ -21,7 +21,7 @@ class ErrorHandler:
     """Manejador centralizado de errores."""
     
     @staticmethod
-    def handle_validation_error(exc: RequestValidationError) -> JSONResponse:
+    def handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
         """Maneja errores de validación de Pydantic."""
         errors = []
         for error in exc.errors():

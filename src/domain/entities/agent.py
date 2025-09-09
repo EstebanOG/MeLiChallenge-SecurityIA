@@ -101,3 +101,4 @@ class RemediationOutput(TypedDict):
     success: bool
     rollback_available: bool
     next_steps: List[str]
+

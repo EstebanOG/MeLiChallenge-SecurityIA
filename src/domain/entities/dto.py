@@ -14,40 +14,37 @@ from dataclasses import dataclass
 # DTOs DE ENTRADA (Requests)
 # ============================================================================
 
-class IoTLogItemDTO(BaseModel):
-    """DTO para un item de log de IoT."""
-    timestamp: str
-    device_id: str
-    device_type: str
-    cpu_usage: float = Field(ge=0, le=100)
-    memory_usage: float = Field(ge=0, le=100)
-    network_in_kb: int = Field(ge=0)
-    network_out_kb: int = Field(ge=0)
-    packet_rate: int = Field(ge=0)
-    avg_response_time_ms: float = Field(ge=0)
-    service_access_count: int = Field(ge=0)
-    failed_auth_attempts: int = Field(ge=0)
-    is_encrypted: int = Field(ge=0, le=1)
-    geo_location_variation: float = Field(ge=0)
-    label: Optional[str] = None
+class ThreatLogItemDTO(BaseModel):
+    """DTO para un item de log de threat intelligence."""
+    session_id: str
+    network_packet_size: int = Field(ge=0)
+    protocol_type: str
+    login_attempts: int = Field(ge=0)
+    session_duration: float = Field(ge=0)
+    encryption_used: str
+    ip_reputation_score: float = Field(ge=0, le=1)
+    failed_logins: int = Field(ge=0)
+    browser_type: str
+    unusual_time_access: int = Field(ge=0, le=1)
+    attack_detected: Optional[int] = Field(ge=0, le=1, default=None)
 
 
-class IoTAnalyzeRequestDTO(BaseModel):
-    """DTO para solicitud de análisis de logs IoT."""
-    logs: List[IoTLogItemDTO]
+class ThreatAnalyzeRequestDTO(BaseModel):
+    """DTO para solicitud de análisis de logs de threat intelligence."""
+    logs: List[ThreatLogItemDTO]
 
 
 class TrainRequestDTO(BaseModel):
     """DTO para solicitud de entrenamiento."""
-    logs: List[IoTLogItemDTO]
+    logs: List[ThreatLogItemDTO]
 
 
 # ============================================================================
 # DTOs DE SALIDA (Responses)
 # ============================================================================
 
-class IoTAnalyzeResponseDTO(BaseModel):
-    """DTO para respuesta de análisis de logs IoT."""
+class ThreatAnalyzeResponseDTO(BaseModel):
+    """DTO para respuesta de análisis de logs de threat intelligence."""
     trace_id: str
     score: float
     decision: Dict[str, Any]

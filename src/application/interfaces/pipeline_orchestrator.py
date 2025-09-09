@@ -10,7 +10,6 @@ class PipelineOrchestrator(ABC):
     @abstractmethod
     def execute_pipeline(
         self, 
-        config: PipelineConfig, 
         logs: List[Dict[str, Any]], 
         context: Optional[AgentContext] = None
     ) -> PipelineExecution:

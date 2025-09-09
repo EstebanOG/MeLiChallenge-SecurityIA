@@ -86,3 +86,4 @@ class PipelineExecution:
             if result.agent_type == agent_type:
                 return result
         return None
+

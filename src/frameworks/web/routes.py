@@ -7,20 +7,24 @@ todos los controladores y maneja la configuración de la aplicación.
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+
+from ...frameworks.orchestration.langgraph_orchestrator import LangGraphPipelineOrchestrator
+
 from ...adapters.controllers.analysis_controller import AnalysisController
 from ...adapters.controllers.training_controller import TrainingController
 from ...adapters.controllers.dataset_controller import DatasetController
 from ...adapters.controllers.health_controller import router as health_router
 from ...adapters.presenters.error_handler import ErrorHandler
-from ...application.use_cases.analyze_iot_logs import AnalyzeIoTLogsUseCase
+from ...adapters.gateways.anomaly_detector_gateway import AnomalyDetectorGateway
+from ...adapters.gateways.dataset_gateway import DatasetGateway
+
+from ...application.use_cases.analyze_logs import AnalyzeThreatLogsUseCase
 from ...application.use_cases.train_iot_model import TrainIoTModelUseCase
 from ...application.use_cases.train_iot_model_from_kaggle import TrainIoTModelFromKaggleUseCase
 from ...application.use_cases.get_dataset_info import GetDatasetInfoUseCase
 from ...application.use_cases.get_dataset_sample import GetDatasetSampleUseCase
-from ...adapters.gateways.anomaly_detector_gateway import AnomalyDetectorGateway
-from ...adapters.gateways.dataset_gateway import DatasetGateway
-from ...frameworks.orchestration.simple_orchestrator import SimplePipelineOrchestrator
-from ...frameworks.orchestration.simple_agent_registry import SimpleAgentRegistry
+
+
 
 
 def create_app() -> FastAPI:
@@ -51,11 +55,10 @@ def create_app() -> FastAPI:
     dataset_gateway = DatasetGateway()
     
     # Crear servicios de orquestación
-    agent_registry = SimpleAgentRegistry()
-    orchestrator = SimplePipelineOrchestrator(agent_registry)
+    orchestrator = LangGraphPipelineOrchestrator()
     
     # Crear casos de uso
-    analyze_use_case = AnalyzeIoTLogsUseCase(orchestrator, agent_registry)
+    analyze_use_case = AnalyzeThreatLogsUseCase(orchestrator)
     train_use_case = TrainIoTModelUseCase(anomaly_detector)
     train_from_kaggle_use_case = TrainIoTModelFromKaggleUseCase(anomaly_detector, dataset_gateway)
     get_info_use_case = GetDatasetInfoUseCase()
