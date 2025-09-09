@@ -35,6 +35,42 @@ python wsgi.py  # inicia uvicorn en reload
 
 La API estará disponible en: `http://localhost:8000`
 
+## Pruebas
+
+El proyecto incluye pruebas automatizadas organizadas por tipo y alcance.
+
+### **Tipos de Pruebas Disponibles**
+
+| Tipo | Descripción | Comando |
+|------|-------------|---------|
+| **Unit** | Pruebas de componentes individuales | `python run_tests.py unit` | 
+| **Integration** | Pruebas de interacción entre componentes | `python run_tests.py integration` | 
+| **E2E** | Pruebas del flujo completo con datos reales | `python run_tests.py e2e` | 
+| **All** | Ejecuta todos los tipos de pruebas | `python run_tests.py all` | 
+
+### **Ejecutar Pruebas**
+
+```bash
+# Pruebas unitarias
+python run_tests.py unit
+
+# Pruebas de integración
+python run_tests.py integration
+
+# Pruebas End-to-End
+python run_tests.py e2e
+
+# Ejecutar toda la suite
+python run_tests.py all
+
+# Reporte de cobertura
+python run_tests.py coverage
+# Reportes generados en:
+# - HTML: htmlcov/index.html
+# - XML: coverage.xml
+# - Terminal: resumen en consola
+```
+
 ## **Análisis de Amenazas: STRIDE + MITRE ATT&CK**
 
 Se realizó un **modelado de amenazas** aplicando frameworks de ciberseguridad estándar de la industria:
@@ -429,37 +465,34 @@ Los logs se muestran en la consola donde se ejecuta la API.
 ### **Persistencia del Modelo:**
 El modelo entrenado se guarda automáticamente y se recarga en cada reinicio.
 
-## 🧪 Pruebas
+### **🧪 Pruebas Manuales (API)**
 
-### **Pruebas Manuales:**
 ```bash
-# Verificar estado
+# Verificar estado de la API
 curl http://localhost:8000/health
 
-# Obtener información
-curl http://localhost:8000/info
+# Obtener información del proyecto
+curl http://localhost:8000/
 
-# Entrenar modelo
+# Entrenar modelo con datos de Kaggle
 curl -X POST http://localhost:8000/train/iot/kaggle
 
-# Analizar datos
+# Analizar logs de sesión de red
 curl -X POST "http://localhost:8000/analyze" \
   -H "Content-Type: application/json" \
   -d '{
     "logs": [{
-      "timestamp": "2025-01-20 12:00:00",
-      "device_id": "thermostat_001",
-      "device_type": "thermostat",
-      "cpu_usage": 75.5,
-      "memory_usage": 60.2,
-      "network_in_kb": 150,
-      "network_out_kb": 300,
-      "packet_rate": 450,
-      "avg_response_time_ms": 250.0,
-      "service_access_count": 5,
-      "failed_auth_attempts": 2,
-      "is_encrypted": 1,
-      "geo_location_variation": 5.5
+      "session_id": "session_001",
+      "network_packet_size": 150,
+      "protocol_type": "TCP",
+      "login_attempts": 5,
+      "session_duration": 250.0,
+      "encryption_used": "AES",
+      "ip_reputation_score": 0.8,
+      "failed_logins": 2,
+      "browser_type": "Chrome",
+      "unusual_time_access": 0,
+      "attack_detected": 0
     }]
   }'
 ```
