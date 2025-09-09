@@ -178,95 +178,55 @@ graph TB
     class F frameworksLayer
 ```
 
-### **🤖 PIPELINE DE AGENTES LANGGRAPH:**
+### **Agentes**
 
-Tu proyecto incluye un sistema de agentes inteligentes que orquesta el análisis de anomalías IoT. Este pipeline implementa **Clean Architecture** manteniendo la separación de responsabilidades.
+Este proyecto implementa un sistema de **agentes inteligentes** para la **detección de intrusiones en ciberseguridad**, analizando **tráfico de red y comportamiento de usuario**.
 
-#### **🎭 ARQUITECTURA DE AGENTES:**
+### **Agentes Especializados**
+
+1. **SupervisedAgent**  
+   Detecta amenazas conocidas usando patrones y firmas predefinidas.
+2. **UnsupervisedAgent**  
+   Identifica anomalías no supervisadas aplicando técnicas de machine learning.
+3. **DecisionAgent**  
+   Toma decisiones de respuesta basadas en reglas dinámicas y confianza del modelo.
+4. **ReportAgent**  
+   Genera reportes finales con hallazgos, métricas y recomendaciones.
+
+### **Pipeline de agentes**
 
 ```mermaid
 graph TB
     %% Estilos para agentes
-    classDef agentStyle fill:#fce4ec,stroke:#880e4f,stroke-width:3px
-    classDef stateStyle fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef supervisedStyle fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    classDef unsupervisedStyle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#e65100
+    classDef decisionStyle fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
+    classDef reportStyle fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,color:#4a148c
     
-    %% Estados del pipeline
-    subgraph STATES ["Estados del Pipeline"]
-        S1[logs List]
-        S2[trace_id]
-        S3[ingestion Output]
-        S4[batch_score]
-        S5[batch_is_threat]
-        S6[decision Output]
+    %% Agentes especializados
+    subgraph AGENTS ["Pipeline de Agentes Inteligentes"]
+        A1[SupervisedAgent<br/>Detección de Amenazas Conocidas]
+        A2[UnsupervisedAgent<br/>Detección de Anomalías]
+        A3[DecisionAgent<br/>Toma de Decisiones]
+        A4[ReportAgent<br/>Generación de Reportes]
     end
     
-    %% Agentes
-    subgraph AGENTS ["Agentes Inteligentes"]
-        A1[Ingestion Agent<br/>Validación y Sanitización]
-        A2[ML Scoring Agent<br/>Análisis con Isolation Forest]
-        A3[Decision Agent<br/>Sugerencia de Acciones]
-    end
-    
-    %% Flujo del pipeline
-    S1 --> A1
-    A1 --> S3
-    S3 --> A2
-    A2 --> S4
-    A2 --> S5
-    S4 --> A3
-    S5 --> A3
-    A3 --> S6
+    %% Flujo principal con decisiones
+    A1 -->|Ataque Conocido| A3
+    A1 -->|Comportamiento Normal| A2
+    A2 -->|Anomalía Detectada| A3
+    A2 -->|Comportamiento Normal| A4
+    A3 --> A4
     
     %% Aplicar estilos
-    class S1,S2,S3,S4,S5,S6 stateStyle
-    class A1,A2,A3 agentStyle
-```
+    class A1 supervisedStyle
+    class A2 unsupervisedStyle
+    class A3 decisionStyle
+    class A4 reportStyle
 
-#### **🔄 FLUJO DE EJECUCIÓN DE AGENTES:**
-
-```mermaid
-sequenceDiagram
-    participant Client as 🌐 Cliente HTTP
-    participant Routes as 🚦 FastAPI Routes
-    participant Pipeline as 🎭 LangGraph Pipeline
-    participant Ingestion as 🔍 Ingestion Agent
-    participant MLScoring as 🤖 ML Scoring Agent
-    participant Decision as 🎯 Decision Agent
-    participant Detector as 🔌 IsolationForestDetector
-    
-    Note over Client,Detector: Pipeline de Agentes para Análisis IoT
-    
-    Client->>Routes: POST /analyze
-    Routes->>Pipeline: run_agents_pipeline(logs, trace_id)
-    
-    Note over Pipeline: 🚀 INICIO DEL PIPELINE
-    
-    Pipeline->>Ingestion: Ejecutar Ingestion Agent
-    Ingestion->>Ingestion: Validar datos IoT
-    Ingestion->>Ingestion: Sanitizar métricas
-    Ingestion-->>Pipeline: IngestionOutput
-    
-    Note over Pipeline: 🔍 DATOS VALIDADOS Y SANITIZADOS
-    
-    Pipeline->>MLScoring: Ejecutar ML Scoring Agent
-    MLScoring->>Detector: IsolationForestDetector.analyze()
-    Detector->>Detector: Procesar con Isolation Forest
-    Detector-->>MLScoring: AnomalyResult
-    MLScoring-->>Pipeline: batch_score + batch_is_threat
-    
-    Note over Pipeline: 🤖 SCORE DE ANOMALÍA CALCULADO
-    
-    Pipeline->>Decision: Ejecutar Decision Agent
-    Decision->>Decision: Analizar score y métricas
-    Decision->>Decision: Determinar acción sugerida
-    Decision-->>Pipeline: DecisionOutput
-    
-    Note over Pipeline: 🎯 ACCIÓN SUGERIDA GENERADA
-    
-    Pipeline-->>Routes: Resultado completo del pipeline
-    Routes-->>Client: JSON Response con análisis completo
-    
-    Note over Client,Detector: ✅ PIPELINE COMPLETADO EXITOSAMENTE
+    %% Aplicar estilos
+    class A1,A2,A4 agentStyle
+    class A3 decisionStyle
 ```
 
 ## 🔧 Endpoints Principales
@@ -423,15 +383,8 @@ curl http://localhost:8000/dataset/info
 10. **is_encrypted**: Indicador de encriptación
 11. **geo_variation**: Variación de ubicación geográfica
 
-## 🎯 Pipeline de Agentes (LangGraph)
 
-El sistema incluye un pipeline de agentes inteligentes:
-
-1. **Agente de Ingestión**: Valida y sanitiza datos IoT
-2. **Agente de ML Scoring**: Ejecuta el modelo de detección
-3. **Agente de Decisión**: Sugiere acciones basadas en el score
-
-### **Acciones Sugeridas:**
+### **🎯 Acciones Sugeridas:**
 - **monitor**: Monitorear el dispositivo
 - **investigate**: Investigar más a fondo
 - **alert**: Enviar alerta de seguridad
