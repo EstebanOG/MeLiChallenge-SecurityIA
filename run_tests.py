@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script para ejecutar tests del proyecto IoT Anomaly Detection.
+Script para ejecutar tests del proyecto Threat Intelligence & Anomaly Detection.
 
 Este script proporciona una interfaz fácil para ejecutar diferentes tipos de tests
 y generar reportes de cobertura.
@@ -9,7 +9,13 @@ y generar reportes de cobertura.
 import subprocess
 import sys
 import argparse
+import os
 from pathlib import Path
+
+
+def get_python_executable():
+    """Obtiene el ejecutable de Python correcto."""
+    return sys.executable
 
 
 def run_command(command, description):
@@ -35,12 +41,10 @@ def run_command(command, description):
 def run_unit_tests():
     """Ejecuta tests unitarios."""
     command = [
-        "python", "-m", "pytest", 
-        "tests/domain/", 
-        "tests/application/", 
-        "tests/presentation/fastapi_app/controllers/",
-        "tests/presentation/fastapi_app/middleware/",
-        "tests/presentation/fastapi_app/factories/",
+        get_python_executable(), "-m", "pytest", 
+        "tests/adapters/controllers/",
+        "tests/frameworks/orchestration/",
+        "tests/frameworks/web/",
         "-m", "unit", "-v"
     ]
     return run_command(command, "Tests Unitarios")
@@ -49,8 +53,8 @@ def run_unit_tests():
 def run_integration_tests():
     """Ejecuta tests de integración."""
     command = [
-        "python", "-m", "pytest", 
-        "tests/integration/", 
+        get_python_executable(), "-m", "pytest", 
+        "tests/",
         "-m", "integration", "-v"
     ]
     return run_command(command, "Tests de Integración")
@@ -59,7 +63,7 @@ def run_integration_tests():
 def run_all_tests():
     """Ejecuta todos los tests."""
     command = [
-        "python", "-m", "pytest", 
+        get_python_executable(), "-m", "pytest", 
         "tests/", 
         "-v", "--tb=short"
     ]
@@ -69,7 +73,7 @@ def run_all_tests():
 def run_tests_with_coverage():
     """Ejecuta tests con reporte de cobertura."""
     command = [
-        "python", "-m", "pytest", 
+        get_python_executable(), "-m", "pytest", 
         "tests/", 
         "--cov=src", 
         "--cov-report=html", 
@@ -83,7 +87,7 @@ def run_tests_with_coverage():
 def run_specific_test(test_path):
     """Ejecuta un test específico."""
     command = [
-        "python", "-m", "pytest", 
+        get_python_executable(), "-m", "pytest", 
         test_path, 
         "-v", "--tb=short"
     ]
@@ -93,7 +97,7 @@ def run_specific_test(test_path):
 def run_fast_tests():
     """Ejecuta solo tests rápidos."""
     command = [
-        "python", "-m", "pytest", 
+        get_python_executable(), "-m", "pytest", 
         "tests/", 
         "-m", "fast", "-v"
     ]
@@ -103,19 +107,29 @@ def run_fast_tests():
 def run_slow_tests():
     """Ejecuta solo tests lentos."""
     command = [
-        "python", "-m", "pytest", 
+        get_python_executable(), "-m", "pytest", 
         "tests/", 
         "-m", "slow", "-v"
     ]
     return run_command(command, "Tests Lentos")
 
 
+def run_e2e_tests():
+    """Ejecuta tests End-to-End."""
+    command = [
+        get_python_executable(), "-m", "pytest", 
+        "tests/e2e/", 
+        "-m", "e2e", "-v"
+    ]
+    return run_command(command, "Tests End-to-End")
+
+
 def main():
     """Función principal del script."""
-    parser = argparse.ArgumentParser(description="Ejecutar tests del proyecto IoT Anomaly Detection")
+    parser = argparse.ArgumentParser(description="Ejecutar tests del proyecto Threat Intelligence & Anomaly Detection")
     parser.add_argument(
         "test_type", 
-        choices=["unit", "integration", "all", "coverage", "fast", "slow", "specific"],
+        choices=["unit", "integration", "e2e", "all", "coverage", "fast", "slow", "specific"],
         help="Tipo de tests a ejecutar"
     )
     parser.add_argument(
@@ -130,7 +144,7 @@ def main():
     
     args = parser.parse_args()
     
-    print("🧪 Ejecutando Tests del Proyecto IoT Anomaly Detection")
+    print("🧪 Ejecutando Tests del Proyecto Threat Intelligence & Anomaly Detection")
     print("=" * 60)
     
     success = False
@@ -139,6 +153,8 @@ def main():
         success = run_unit_tests()
     elif args.test_type == "integration":
         success = run_integration_tests()
+    elif args.test_type == "e2e":
+        success = run_e2e_tests()
     elif args.test_type == "all":
         success = run_all_tests()
     elif args.test_type == "coverage":
@@ -163,3 +179,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
