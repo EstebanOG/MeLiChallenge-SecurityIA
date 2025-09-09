@@ -42,3 +42,4 @@ class GetDatasetSampleUseCase:
             total_rows=len(df),
             data=sample.to_dict('records')
         )
+
