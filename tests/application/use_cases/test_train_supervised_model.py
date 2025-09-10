@@ -200,10 +200,12 @@ class TestTrainSupervisedModelUseCase:
         assert result["metrics"]["recall"] == "N/A - Modelo no entrenado"
         assert result["metrics"]["f1_score"] == "N/A - Modelo no entrenado"
     
-    def test_get_model_status_model_not_trained(self):
+    @patch('os.path.exists')
+    def test_get_model_status_model_not_trained(self, mock_exists):
         """Test de estado cuando el modelo no está entrenado."""
-        # Configurar mock
+        # Configurar mocks
         self.mock_supervised_model.is_trained.return_value = False
+        mock_exists.return_value = False  # El archivo del modelo no existe
         
         # Ejecutar
         result = self.use_case.get_model_status()
@@ -217,14 +219,16 @@ class TestTrainSupervisedModelUseCase:
         assert result["metrics"]["recall"] == "N/A - Modelo no entrenado"
         assert result["metrics"]["f1_score"] == "N/A - Modelo no entrenado"
     
-    def test_get_model_status_with_custom_path(self):
+    @patch('os.path.exists')
+    def test_get_model_status_with_custom_path(self, mock_exists):
         """Test de estado con ruta de modelo personalizada."""
         # Crear caso de uso con ruta personalizada
         custom_path = "custom/models/test_model.joblib"
         use_case = TrainSupervisedModelUseCase(self.mock_supervised_model, custom_path)
         
-        # Configurar mock
+        # Configurar mocks
         self.mock_supervised_model.is_trained.return_value = True
+        mock_exists.return_value = False  # El archivo no existe
         
         # Ejecutar
         result = use_case.get_model_status()
