@@ -5,7 +5,7 @@ Esta clase es responsable de construir el grafo de LangGraph
 con todos los nodos y edges necesarios para el pipeline.
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from langgraph.graph import StateGraph, END
 from ..agents import (
     LangGraphAgentState,
@@ -15,14 +15,15 @@ from ..agents import (
     ReportAgent
 )
 from .flow_router import FlowRouter
+from ....application.interfaces.threat_detector_interface import ThreatDetectorInterface
 
 
 class LangGraphBuilder:
     """Constructor de grafos LangGraph para el pipeline de agentes."""
     
-    def __init__(self):
+    def __init__(self, threat_detector: ThreatDetectorInterface):
         self.agents = {
-            "supervised_agent": SupervisedAgent(),
+            "supervised_agent": SupervisedAgent(threat_detector),
             "unsupervised_agent": UnsupervisedAgent(),
             "decision_agent": DecisionAgent(),
             "report_agent": ReportAgent()

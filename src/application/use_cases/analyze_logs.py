@@ -5,17 +5,23 @@ Este caso de uso encapsula la lógica de negocio para analizar logs de sesiones 
 y detectar amenazas usando el pipeline de agentes LangGraph.
 """
 
+import os
+import sys
 from typing import List, Dict, Any
 from ...domain.entities.dto import ThreatAnalyzeRequestDTO, ThreatAnalyzeResponseDTO
 from ...domain.entities.agent import AgentType
 from ..interfaces.pipeline_orchestrator import PipelineOrchestrator
 
+from ..interfaces.supervised_model_interface import SupervisedModelInterface
+
 
 class AnalyzeThreatLogsUseCase:
     """Caso de uso para análisis de logs de threat intelligence."""
     
-    def __init__(self, orchestrator: PipelineOrchestrator):
+    def __init__(self, orchestrator: PipelineOrchestrator, supervised_model: SupervisedModelInterface = None):
         self.orchestrator = orchestrator
+        self.supervised_model = supervised_model
+        self.supervised_model_path = "models/supervised_model.joblib"
     
     def execute(self, request: ThreatAnalyzeRequestDTO) -> ThreatAnalyzeResponseDTO:
         """
@@ -27,6 +33,13 @@ class AnalyzeThreatLogsUseCase:
         Returns:
             DTO con el resultado del análisis
         """
+        # Verificar si el modelo supervisado está entrenado
+        if not self._is_supervised_model_trained():
+            raise ValueError(
+                "El modelo supervisado no está entrenado. "
+                "Por favor, entrena el modelo primero usando POST /train/supervised"
+            )
+        
         # Convertir DTOs a formato interno
         raw_logs = [item.model_dump() for item in request.logs]
         
@@ -66,4 +79,23 @@ class AnalyzeThreatLogsUseCase:
             },
             batch_size=len(request.logs)
         )
+    
+    def _is_supervised_model_trained(self) -> bool:
+        """
+        Verifica si el modelo supervisado está entrenado.
+        
+        Returns:
+            True si el modelo está entrenado, False en caso contrario
+        """
+        try:
+            if not os.path.exists(self.supervised_model_path):
+                return False
+            
+            if self.supervised_model:
+                return self.supervised_model.is_trained()
+            else:
+                return False
+            
+        except Exception:
+            return False
     

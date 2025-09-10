@@ -59,6 +59,15 @@ class TrainResponseDTO(BaseModel):
     features: int
 
 
+class SupervisedTrainResponseDTO(BaseModel):
+    """DTO para respuesta de entrenamiento del modelo supervisado."""
+    success: bool
+    message: str
+    model_path: Optional[str] = None
+    training_time: Optional[float] = None
+    metrics: Optional[Dict[str, Any]] = None
+
+
 class DatasetInfoDTO(BaseModel):
     """DTO para información del dataset."""
     total_rows: int

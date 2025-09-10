@@ -13,6 +13,7 @@ from ...frameworks.orchestration.langgraph_orchestrator import LangGraphPipeline
 from ...adapters.controllers.analysis_controller import AnalysisController
 from ...adapters.controllers.training_controller import TrainingController
 from ...adapters.controllers.dataset_controller import DatasetController
+from ...adapters.controllers.supervised_model_controller import SupervisedModelController
 from ...adapters.controllers.health_controller import router as health_router
 from ...adapters.presenters.error_handler import ErrorHandler
 from ...adapters.gateways.anomaly_detector_gateway import AnomalyDetectorGateway
@@ -21,6 +22,9 @@ from ...adapters.gateways.dataset_gateway import DatasetGateway
 from ...application.use_cases.analyze_logs import AnalyzeThreatLogsUseCase
 from ...application.use_cases.train_iot_model import TrainIoTModelUseCase
 from ...application.use_cases.train_iot_model_from_kaggle import TrainIoTModelFromKaggleUseCase
+from ...application.use_cases.train_supervised_model import TrainSupervisedModelUseCase
+from ...adapters.ml.supervised_model_adapter import SupervisedModelAdapter
+from ...adapters.ml.supervised_threat_detector_adapter import SupervisedThreatDetectorAdapter
 from ...application.use_cases.get_dataset_info import GetDatasetInfoUseCase
 from ...application.use_cases.get_dataset_sample import GetDatasetSampleUseCase
 
@@ -54,25 +58,34 @@ def create_app() -> FastAPI:
     anomaly_detector = AnomalyDetectorGateway()
     dataset_gateway = DatasetGateway()
     
-    # Crear servicios de orquestación
-    orchestrator = LangGraphPipelineOrchestrator()
+    # Crear adaptador del modelo supervisado
+    supervised_model_adapter = SupervisedModelAdapter()
+    
+    # Crear adaptador del detector de amenazas
+    threat_detector_adapter = SupervisedThreatDetectorAdapter()
+    
+    # Crear servicios de orquestación con detector
+    orchestrator = LangGraphPipelineOrchestrator(threat_detector_adapter)
     
     # Crear casos de uso
-    analyze_use_case = AnalyzeThreatLogsUseCase(orchestrator)
+    analyze_use_case = AnalyzeThreatLogsUseCase(orchestrator, supervised_model_adapter)
     train_use_case = TrainIoTModelUseCase(anomaly_detector)
     train_from_kaggle_use_case = TrainIoTModelFromKaggleUseCase(anomaly_detector, dataset_gateway)
+    train_supervised_use_case = TrainSupervisedModelUseCase(supervised_model_adapter)
     get_info_use_case = GetDatasetInfoUseCase()
     get_sample_use_case = GetDatasetSampleUseCase()
     
     # Crear controladores
     analysis_controller = AnalysisController(analyze_use_case)
     training_controller = TrainingController(train_use_case, train_from_kaggle_use_case)
+    supervised_model_controller = SupervisedModelController(train_supervised_use_case)
     dataset_controller = DatasetController(get_info_use_case, get_sample_use_case)
     
     # Registrar controladores
     app.include_router(health_router)
     app.include_router(analysis_controller.get_router())
     app.include_router(training_controller.get_router())
+    app.include_router(supervised_model_controller.get_router())
     app.include_router(dataset_controller.get_router())
     
     return app
