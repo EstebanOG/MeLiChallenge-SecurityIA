@@ -29,13 +29,7 @@ class TrainSupervisedModelUseCase:
             # Verificar si el dataset existe
             dataset_path = "notebooks/data/processed/dataset_complete.csv"
             if not os.path.exists(dataset_path):
-                return SupervisedTrainResponseDTO(
-                    success=False,
-                    message="Dataset no encontrado. Asegúrate de que el archivo esté en notebooks/data/processed/dataset_complete.csv",
-                    model_path=None,
-                    training_time=None,
-                    metrics=None
-                )
+                raise FileNotFoundError("Dataset no encontrado. Asegúrate de que el archivo esté en notebooks/data/processed/dataset_complete.csv")
             
             # Entrenar el modelo
             metrics = self.supervised_model.train(dataset_path)
@@ -59,14 +53,12 @@ class TrainSupervisedModelUseCase:
                 metrics=response_metrics
             )
             
+        except FileNotFoundError:
+            # Re-lanzar FileNotFoundError para que los tests puedan capturarla
+            raise
         except Exception as e:
-            return SupervisedTrainResponseDTO(
-                success=False,
-                message=f"Error durante el entrenamiento: {str(e)}",
-                model_path=None,
-                training_time=None,
-                metrics=None
-            )
+            # Lanzar la excepción original para que los tests puedan capturarla
+            raise Exception(f"Error durante el entrenamiento: {str(e)}")
     
     def is_model_trained(self) -> bool:
         """
