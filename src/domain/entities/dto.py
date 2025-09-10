@@ -15,7 +15,21 @@ from dataclasses import dataclass
 # ============================================================================
 
 class ThreatLogItemDTO(BaseModel):
-    """DTO para un item de log de threat intelligence."""
+    """DTO para un item de log de threat intelligence (sin etiquetas)."""
+    session_id: str
+    network_packet_size: int = Field(ge=0)
+    protocol_type: str
+    login_attempts: int = Field(ge=0)
+    session_duration: float = Field(ge=0)
+    encryption_used: str
+    ip_reputation_score: float = Field(ge=0, le=1)
+    failed_logins: int = Field(ge=0)
+    browser_type: str
+    unusual_time_access: int = Field(ge=0, le=1)
+
+
+class ThreatLogItemWithLabelDTO(BaseModel):
+    """DTO para un item de log de threat intelligence con etiqueta (para entrenamiento)."""
     session_id: str
     network_packet_size: int = Field(ge=0)
     protocol_type: str
@@ -36,7 +50,7 @@ class ThreatAnalyzeRequestDTO(BaseModel):
 
 class TrainRequestDTO(BaseModel):
     """DTO para solicitud de entrenamiento."""
-    logs: List[ThreatLogItemDTO]
+    logs: List[ThreatLogItemWithLabelDTO]
 
 
 # ============================================================================
@@ -49,6 +63,7 @@ class ThreatAnalyzeResponseDTO(BaseModel):
     score: float
     decision: Dict[str, Any]
     batch_size: int
+    threat_modeling: Optional[Dict[str, Any]] = None
 
 
 class TrainResponseDTO(BaseModel):

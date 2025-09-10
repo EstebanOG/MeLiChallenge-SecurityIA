@@ -7,8 +7,8 @@ anómalos que no están en los patrones conocidos usando Isolation Forest.
 
 from typing import List, Dict, Any, Optional
 from .base_agent import LangGraphAgentState, add_execution_step
-from ....application.interfaces.anomaly_detector import AnomalyDetector
-from ....domain.entities.log_entry import LogEntry
+from src.application.interfaces.anomaly_detector import AnomalyDetector
+from src.domain.entities.dto import ThreatLogItemDTO
 
 
 class UnsupervisedAgent:
@@ -34,23 +34,47 @@ class UnsupervisedAgent:
             print(f"🔍 [UNSUPERVISED] Anomaly result type: {type(anomaly_result)}")
             print(f"🔍 [UNSUPERVISED] Anomaly result: {anomaly_result}")
             
-            # Verificar si es un diccionario o un objeto AnomalyResult
-            if isinstance(anomaly_result, dict):
-                print("⚠️ [UNSUPERVISED] Anomaly result es un diccionario, no un objeto AnomalyResult")
-                is_anomalous = anomaly_result.get('threat_detected', False)
-                anomaly_score = anomaly_result.get('batch_score', 0.0)
-                confidence = anomaly_result.get('confidence', 0.0)
-                individual_scores = anomaly_result.get('anomaly_scores', [])
-            else:
-                is_anomalous = anomaly_result.threat_detected
-                anomaly_score = anomaly_result.batch_score
-                confidence = anomaly_result.confidence
-                individual_scores = anomaly_result.anomaly_scores
+            # AnomalyResult es un TypedDict, por lo que siempre es un diccionario
+            # Extraer valores del diccionario
+            is_anomalous = anomaly_result.get('threat_detected', False)
+            anomaly_score = anomaly_result.get('batch_score', 0.0)
+            confidence = anomaly_result.get('confidence', 0.0)
+            individual_scores = anomaly_result.get('anomaly_scores', [])
             
-            # Verificar si el score del ML es irracionalmente alto (> 1.0)
-            # Si es así, usar reglas heurísticas como fallback
-            if anomaly_score > 1.0:
-                print(f"⚠️ [UNSUPERVISED] Score ML irracionalmente alto ({anomaly_score:.3f}), usando reglas heurísticas")
+            # Normalizar scores de Isolation Forest a rango [0, 1]
+            # Los scores de Isolation Forest pueden ser negativos y necesitan normalización
+            if individual_scores:
+                min_score = min(individual_scores)
+                max_score = max(individual_scores)
+                
+                # Si hay variación en los scores, normalizar
+                if max_score > min_score:
+                    # Normalizar a [0, 1] donde 0 = normal, 1 = muy anómalo
+                    individual_scores = [(score - min_score) / (max_score - min_score) for score in individual_scores]
+                    anomaly_score = sum(individual_scores) / len(individual_scores)
+                    print(f"✅ [UNSUPERVISED] Scores normalizados: min={min_score:.3f}, max={max_score:.3f}, avg={anomaly_score:.3f}")
+                else:
+                    # Si todos los scores son iguales, usar lógica basada en el valor
+                    if min_score > 0.5:  # Scores altos = anómalo
+                        base_score = 0.8
+                    elif min_score > 0:   # Scores medios = moderadamente anómalo
+                        base_score = 0.4
+                    else:                # Scores negativos o cero = normal
+                        base_score = 0.1
+                    
+                    individual_scores = [base_score] * len(individual_scores)
+                    anomaly_score = base_score
+                    print(f"⚠️ [UNSUPERVISED] Scores uniformes ({min_score:.3f}), usando score base: {base_score:.3f}")
+            else:
+                # Si no hay scores individuales, normalizar el batch_score
+                if anomaly_score > 1.0:
+                    anomaly_score = min(anomaly_score, 1.0)
+                elif anomaly_score < 0:
+                    anomaly_score = max(anomaly_score, 0.0)
+            
+            # Verificar si el score normalizado sigue siendo irracionalmente alto
+            if anomaly_score > 0.9:  # Threshold más conservador
+                print(f"⚠️ [UNSUPERVISED] Score ML muy alto después de normalización ({anomaly_score:.3f}), usando reglas heurísticas")
                 is_anomalous, anomaly_score, confidence = self._detect_anomalies_fallback(logs)
                 individual_scores = [anomaly_score] * len(logs)
         else:
@@ -85,12 +109,12 @@ class UnsupervisedAgent:
         
         return state
     
-    def _convert_to_log_entries(self, logs: List[Dict[str, Any]]) -> List[LogEntry]:
-        """Convierte logs de diccionarios a objetos LogEntry."""
+    def _convert_to_log_entries(self, logs: List[Dict[str, Any]]) -> List[ThreatLogItemDTO]:
+        """Convierte logs de diccionarios a objetos ThreatLogItemDTO."""
         log_entries = []
         for log in logs:
             try:
-                log_entry = LogEntry(
+                log_entry = ThreatLogItemDTO(
                     session_id=log.get('session_id', ''),
                     network_packet_size=float(log.get('network_packet_size', 0)),
                     protocol_type=log.get('protocol_type', ''),
@@ -100,8 +124,7 @@ class UnsupervisedAgent:
                     ip_reputation_score=float(log.get('ip_reputation_score', 0)),
                     failed_logins=int(log.get('failed_logins', 0)),
                     browser_type=log.get('browser_type', ''),
-                    unusual_time_access=bool(log.get('unusual_time_access', False)),
-                    attack_detected=bool(log.get('attack_detected', False))
+                    unusual_time_access=int(log.get('unusual_time_access', 0))
                 )
                 log_entries.append(log_entry)
             except (ValueError, TypeError) as e:

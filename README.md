@@ -10,6 +10,8 @@ Este proyecto representa mi solución al **Reto de Desarrollo y Seguridad de Mer
 
 Este proyecto ha sido adaptado para trabajar con el dataset **"Cybersecurity Intrusion Detection Dataset"** de Kaggle, que contiene métricas de sesiones de red para la detección de intrusiones y amenazas de seguridad.
 
+**[Acceder al Dataset en Kaggle](https://www.kaggle.com/datasets/dnkumars/cybersecurity-intrusion-detection-dataset/data)**
+
 ### **Características del Dataset:**
 - **9,537 registros** de sesiones de red
 - **2 clases**: Normal (0), Ataque (1)
@@ -122,7 +124,6 @@ Implementamos **Indicadores de Compromiso (IoC)** basados en las reglas de amena
 **[Ver análisis completo y métricas detalladas](notebooks/Threat_Model.ipynb)**
 
 
-
 ## **ARQUITECTURA DEL PROYECTO**
 
 Este proyecto implementa **Clean Architecture**, con cuatro capas y dependencias que apuntan hacia adentro.
@@ -229,262 +230,71 @@ graph TB
     class A3 decisionStyle
 ```
 
-## 🔧 Endpoints Principales
+## ENDPOINTS PRINCIPALES
 
-### **🏥 Salud y Información**
-- **GET** `/health` → `{ "status": "ok", "dataset": "IoT Anomaly Detection" }`
-- **GET** `/info` → Información del proyecto y tipos de dispositivos soportados
+### **Salud y Información**
+- **GET** `/health` → Estado de salud de la API
+- **GET** `/` → Información general del proyecto
 
-### **🔍 Análisis de Anomalías**
-- **POST** `/analyze` - Análisis completo con pipeline de agentes
-- **POST** `/analyze/iot/direct` - Análisis directo solo con modelo ML
+### **Análisis de Amenazas**
+- **POST** `/analyze` → Análisis completo de amenazas con pipeline de agentes inteligentes
 
-### **🤖 Entrenamiento del Modelo**
-- **POST** `/train/iot` - Entrenamiento con datos personalizados
-- **POST** `/train/iot/kaggle` - Entrenamiento automático desde Kaggle
+### **Entrenamiento de Modelos**
+- **POST** `/train/supervised` → Entrenamiento del modelo supervisado
+- **POST** `/train/unsupervised` → Entrenamiento del modelo no supervisado
 
-### **📊 Gestión de Datasets**
-- **GET** `/dataset/info` - Información del dataset procesado
-- **GET** `/dataset/sample?size=N` - Muestra del dataset
+### **Documentación**
+- **GET** `/docs` → Documentación Swagger UI interactiva
 
-## 📱 Estructura de Datos IoT
+## ESTRUCTURA DE LOGS
 
-### **Campos Requeridos:**
+### **Estructura del Request:**
 ```json
 {
-  "timestamp": "2025-01-20 12:00:00",
-  "device_id": "thermostat_001",
-  "device_type": "thermostat",
-  "cpu_usage": 75.5,
-  "memory_usage": 60.2,
-  "network_in_kb": 150,
-  "network_out_kb": 300,
-  "packet_rate": 450,
-  "avg_response_time_ms": 250.0,
-  "service_access_count": 5,
-  "failed_auth_attempts": 2,
-  "is_encrypted": 1,
-  "geo_location_variation": 5.5
+    "logs": [
+        {
+            "session_id": "sess_normal_typical",
+            "network_packet_size": 500,
+            "protocol_type": "TCP",
+            "login_attempts": 3,
+            "session_duration": 500.0,
+            "encryption_used": "AES",
+            "ip_reputation_score": 0.30,
+            "failed_logins": 1,
+            "browser_type": "Chrome",
+            "unusual_time_access": false
+        }
+    ]
 }
 ```
 
-### **Tipos de Dispositivos Soportados:**
-- **thermostat**: Termostatos inteligentes
-- **smart**: Dispositivos inteligentes generales
-- **sensor**: Sensores de monitoreo
-- **camera**: Cámaras de seguridad
-- **lock**: Cerraduras inteligentes
-- **hub**: Hubs centrales
-- **appliance**: Electrodomésticos inteligentes
-- **wearable**: Dispositivos portátiles
-
-## 🧪 Ejemplos de Uso
-
-### **1. Entrenar el Modelo desde Kaggle**
-```bash
-curl -X POST http://localhost:8000/train/iot/kaggle
-```
-
-**Nota**: El dataset se divide automáticamente en:
-- **80% sin etiquetas**: Para entrenamiento no supervisado
-- **20% con etiquetas**: Para calibración y optimización de thresholds
-
-**Respuesta:**
-```json
-{
-  "status": "trained_from_kaggle",
-  "samples": 1589,
-  "model_path": "models/isoforest.joblib",
-  "features": 11
-}
-```
-
-### **2. Analizar Dispositivos IoT**
-```bash
-curl -X POST "http://localhost:8000/analyze" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "logs": [{
-      "timestamp": "2025-01-20 12:00:00",
-      "device_id": "thermostat_001",
-      "device_type": "thermostat",
-      "cpu_usage": 75.5,
-      "memory_usage": 60.2,
-      "network_in_kb": 150,
-      "network_out_kb": 300,
-      "packet_rate": 450,
-      "avg_response_time_ms": 250.0,
-      "service_access_count": 5,
-      "failed_auth_attempts": 2,
-      "is_encrypted": 1,
-      "geo_location_variation": 5.5
-    }]
-  }'
-```
-
-**Respuesta:**
-```json
-{
-  "trace_id": "uuid-12345",
-  "score": 0.8234,
-  "decision": {
-    "trace_id": "uuid-12345",
-    "is_threat": true,
-    "confidence": 0.85,
-    "action_suggested": "alert",
-    "explanation": "Decision based on anomaly score=0.8234 for batch of 1 logs"
-  },
-  "batch_size": 1
-}
-```
-
-### **3. Obtener Información del Dataset**
-```bash
-curl http://localhost:8000/dataset/info
-```
-
-**Respuesta:**
-```json
-{
-  "total_rows": 10000,
-  "labeled_rows": 1589,
-  "unlabeled_rows": 8411,
-  "columns": ["timestamp", "device_id", ...],
-  "label_distribution": {
-    "Normal": 1263,
-    "Anomaly_DoS": 109,
-    "Anomaly_Injection": 109,
-    "Anomaly_Spoofing": 108
-  },
-  "device_type_distribution": {...},
-  "anomaly_ratio": 0.205
-}
-```
-
-## 🔍 Detector ML (Isolation Forest Adaptado)
-
-- **Modelo**: `ml_isolation_forest_detector.py` adaptado para IoT
-- **Features**: 11 características numéricas de dispositivos IoT
-- **Transformaciones**: Logarítmicas para métricas de red, normalización de porcentajes
-- **Persistencia**: Se guarda en `models/isoforest.joblib` y se recarga automáticamente
-- **Score**: Rango [0,1] donde valores altos indican mayor anomalía
-- **Calibración Automática**: Usa datos etiquetados (20%) para optimizar thresholds
-
-### **Features del Modelo:**
-1. **device_type_idx**: Índice del tipo de dispositivo
-2. **cpu_norm**: CPU normalizado (0-1)
-3. **memory_norm**: Memoria normalizada (0-1)
-4. **log_network_in**: Log del tráfico de entrada
-5. **log_network_out**: Log del tráfico de salida
-6. **log_packet_rate**: Log de la tasa de paquetes
-7. **log_response_time**: Log del tiempo de respuesta
-8. **log_service_count**: Log del conteo de servicios
-9. **log_failed_auth**: Log de intentos fallidos de auth
-10. **is_encrypted**: Indicador de encriptación
-11. **geo_variation**: Variación de ubicación geográfica
-
-
-### **🎯 Acciones Sugeridas:**
-- **monitor**: Monitorear el dispositivo
-- **investigate**: Investigar más a fondo
-- **alert**: Enviar alerta de seguridad
-- **block**: Bloquear el dispositivo
-
-## 📊 Interpretación de Resultados
-
-### **Score de Anomalía (0-1):**
-- **0.0 - 0.3**: Comportamiento normal ✅
-- **0.3 - 0.6**: Comportamiento sospechoso ⚠️
-- **0.6 - 0.8**: Posible anomalía 🚨
-- **0.8 - 1.0**: Anomalía detectada 🚨🚨
-
-### **Calibración Automática:**
-El sistema optimiza automáticamente el threshold usando datos etiquetados:
-- **Threshold inicial**: 0.5 (configurable)
-- **Threshold optimizado**: Se calcula automáticamente para maximizar F1-Score
-- **Métricas**: Precisión, Recall y F1-Score se calculan durante la calibración
-
-### **Casos de Uso:**
-- **Monitoreo en Tiempo Real**: Análisis continuo de métricas IoT
-- **Análisis de Seguridad**: Identificación de ataques DoS, Injection, Spoofing
-- **Mantenimiento Predictivo**: Detección de degradación de rendimiento
-- **Auditoría de Red**: Análisis de patrones de tráfico anómalos
-
-## 🔧 Configuración Avanzada
-
-### **Logs de la API:**
-Los logs se muestran en la consola donde se ejecuta la API.
-
-### **Persistencia del Modelo:**
-El modelo entrenado se guarda automáticamente y se recarga en cada reinicio.
-
-### **🧪 Pruebas Manuales (API)**
-
-```bash
-# Verificar estado de la API
-curl http://localhost:8000/health
-
-# Obtener información del proyecto
-curl http://localhost:8000/
-
-# Entrenar modelo con datos de Kaggle
-curl -X POST http://localhost:8000/train/iot/kaggle
-
-# Analizar logs de sesión de red
-curl -X POST "http://localhost:8000/analyze" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "logs": [{
-      "session_id": "session_001",
-      "network_packet_size": 150,
-      "protocol_type": "TCP",
-      "login_attempts": 5,
-      "session_duration": 250.0,
-      "encryption_used": "AES",
-      "ip_reputation_score": 0.8,
-      "failed_logins": 2,
-      "browser_type": "Chrome",
-      "unusual_time_access": 0,
-      "attack_detected": 0
-    }]
-  }'
-```
-
-## 📚 Recursos Adicionales
-
-- **Dataset Original**: [Kaggle - IoT Anomaly Detection](https://www.kaggle.com/datasets/ziya07/anomaly-detection-and-threat-intelligence-dataset)
-- **Notebook de EDA**: [02_EDA_IoT_Anomaly_Detection.ipynb](notebooks/EDA_IoT_Anomaly_Detection.ipynb)
-
-## 🏗️ Notas de Diseño
-
-- **Capa `domain`**: Contratos y entidades puras (sin dependencias externas)
-- **Capa `application`**: Casos de uso que orquestan puertos del dominio
-- **Capa `infrastructure`**: Implementaciones concretas (adaptadores) de puertos
-- **Capa `orchestration`**: Pipeline de agentes LangGraph para análisis inteligente
-- **Capa `presentation`**: Framework FastAPI y capa HTTP
-
-
----
-
-## 📸 **IMÁGENES DE LA APLICACIÓN FUNCIONANDO**
-
-### **🎯 Capturas de Pantalla de la Aplicación en Acción**
-
+## **EJEMPLOS**
 > **Nota**: Las siguientes imágenes muestran la aplicación procesando datos, respondiendo a solicitudes y generando resultados esperados.
+### **1. Análisis Normal (Sin Amenazas)**
 
-#### **🖥️ Interfaz Principal**
-![Interfaz Principal](docs/images/main-interface.png)
-*Vista principal de la aplicación FastAPI con endpoints disponibles*
+![Análisis Normal](docs/images/normal-analysis.png)
+*Ejemplo de análisis de sesión normal sin amenazas detectadas*
 
-#### **📊 Análisis de Datos IoT**
-![Análisis IoT](docs/images/iot-analysis.png)
-*Procesamiento de logs IoT y detección de anomalías en tiempo real*
 
-#### **📋 Logs y Debugging**
-![Logs](docs/images/application-logs.png)
-*Logs de la aplicación mostrando el procesamiento de requests*
+### **2. Análisis con Amenaza Detectada**
 
----
-## 📄 Licencia
+![Análisis con Amenaza](docs/images/threat-analysis.png)
+*Ejemplo de análisis de sesión con amenazas detectadas*
+
+
+## SEGURIDAD Y DEPENDENCIAS
+
+### **Integración con Snyk**
+
+Este repositorio está integrado con **Snyk** para la revisión continua de dependencias y detección de vulnerabilidades de seguridad.
+
+#### **Estado de la Integración:**
+- **Repositorio enlazado** a cuenta de Snyk
+- **Escaneo automático** de dependencias en cada push/PR
+- **Detección de vulnerabilidades** conocidas en librerías Python
+- **Recomendaciones de actualización** para paquetes vulnerables
+- **Reportes de seguridad** detallados con niveles de severidad
+
+## LICENCIA
 
 Este proyecto está bajo la licencia especificada en el archivo [LICENSE](LICENSE).

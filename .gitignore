@@ -208,3 +208,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# API Keys y configuraciones sensibles
+config.py
+secrets.py
+api_config.py
+*.key
+*.pem
+*.p12
+*.pfx
+.env.local
+.env.production
+.env.staging

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, TypedDict, Dict, Any
-from ...domain.entities.log_entry import LogEntry
+from ...domain.entities.dto import ThreatLogItemDTO
 
 
 class AnomalyResult(TypedDict):
@@ -12,12 +12,12 @@ class AnomalyResult(TypedDict):
 
 class AnomalyDetector(ABC):
     @abstractmethod
-    def detect_anomalies(self, logs: List[LogEntry]) -> AnomalyResult:
+    def detect_anomalies(self, logs: List[ThreatLogItemDTO]) -> AnomalyResult:
         """Return anomaly detection results for a batch of logs."""
         raise NotImplementedError
     
     @abstractmethod
-    def fit(self, logs: List[LogEntry]) -> None:
+    def fit(self, logs: List[ThreatLogItemDTO]) -> None:
         """Train the anomaly detection model with the provided logs."""
         raise NotImplementedError
     
