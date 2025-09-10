@@ -228,7 +228,8 @@ class TestTrainSupervisedModelUseCase:
         
         # Configurar mocks
         self.mock_supervised_model.is_trained.return_value = True
-        mock_exists.return_value = False  # El archivo no existe
+        # El archivo del modelo existe, pero no hay archivo de métricas
+        mock_exists.side_effect = lambda path: path == custom_path
         
         # Ejecutar
         result = use_case.get_model_status()
@@ -236,5 +237,5 @@ class TestTrainSupervisedModelUseCase:
         # Verificar
         assert result["is_trained"] == True
         assert result["model_path"] == custom_path
-        assert result["model_exists"] == False  # No existe el archivo
+        assert result["model_exists"] == True  # El archivo del modelo existe
         assert result["metrics"]["auc_score"] == "N/A - Métricas no guardadas"
