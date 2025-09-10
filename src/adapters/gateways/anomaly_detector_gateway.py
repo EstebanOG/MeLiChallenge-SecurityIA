@@ -6,7 +6,7 @@ Implementa la interfaz AnomalyDetector usando el framework ML.
 
 from typing import List, Dict, Any
 from ...application.interfaces.anomaly_detector import AnomalyDetector, AnomalyResult
-from ...domain.entities.log_entry import LogEntry
+from ...domain.entities.dto import ThreatLogItemDTO
 from ...frameworks.ml.ml_isolation_forest_detector import IsolationForestDetector
 
 
@@ -16,11 +16,11 @@ class AnomalyDetectorGateway(AnomalyDetector):
     def __init__(self):
         self.detector = IsolationForestDetector()
     
-    def detect_anomalies(self, logs: List[LogEntry]) -> AnomalyResult:
+    def detect_anomalies(self, logs: List[ThreatLogItemDTO]) -> AnomalyResult:
         """Detecta anomalías en una lista de logs."""
         return self.detector.detect_anomalies(logs)
     
-    def fit(self, logs: List[LogEntry]) -> None:
+    def fit(self, logs: List[ThreatLogItemDTO]) -> None:
         """Entrena el modelo con los logs proporcionados."""
         self.detector.fit(logs)
     

@@ -38,7 +38,7 @@ except ImportError:
     SKLEARN_AVAILABLE = False
     print("⚠️ scikit-learn no disponible, el detector funcionará en modo básico")
 
-from ...domain.entities.log_entry import LogEntry
+from ...domain.entities.dto import ThreatLogItemDTO, ThreatLogItemWithLabelDTO
 from ...application.interfaces.anomaly_detector import AnomalyDetector, AnomalyResult
 
 
@@ -58,7 +58,7 @@ class IsolationForestDetector(AnomalyDetector):
         self,
         model_path: str = "models/isoforest.joblib",
         random_state: int = 42,
-        contamination: float = 0.1,
+        contamination: float = 0.2,
         threshold: float = 0.5,
         n_estimators: int = 200,
         max_samples: str | int = "auto",
@@ -72,6 +72,8 @@ class IsolationForestDetector(AnomalyDetector):
         self.random_state = random_state
         self.contamination = contamination
         self.threshold = threshold
+        # Adjust threshold based on contamination for better calibration
+        self._adjusted_threshold = threshold
         self.n_estimators = n_estimators
         self.max_samples = max_samples
         self.max_features = max_features
@@ -108,11 +110,17 @@ class IsolationForestDetector(AnomalyDetector):
                     self._scaler = model_data.get('scaler')
                     self.scaler_type = model_data.get('scaler_type', 'none')
                     self._feature_names = model_data.get('feature_names', self._feature_names)
+                    # Cargar threshold ajustado si existe
+                    if 'threshold' in model_data:
+                        self._adjusted_threshold = model_data['threshold']
+                    else:
+                        self._adjusted_threshold = self.threshold
                     print(f"✅ Modelo y scaler cargados desde: {self.model_path}")
                 else:
                     # Formato antiguo - solo modelo
                     self._model = model_data
                     self._scaler = None
+                    self._adjusted_threshold = self.threshold
                     print(f"✅ Modelo cargado desde: {self.model_path} (formato antiguo)")
                 
                 # Cargar estadísticas si existen
@@ -148,6 +156,27 @@ class IsolationForestDetector(AnomalyDetector):
             n_jobs=-1,
         )
     
+    def _calibrate_threshold_from_contamination(self, X_scaled: np.ndarray) -> None:
+        """Calibra el threshold basado en el parámetro de contamination."""
+        if self._model is None:
+            return
+            
+        try:
+            # Obtener scores de anomalía
+            anomaly_scores = self._model.score_samples(X_scaled)
+            anomaly_probs = (anomaly_scores + 1) / 2  # Convert [-1, 1] to [0, 1]
+            
+            # Calcular threshold basado en contamination
+            # Si contamination = 0.1, queremos que el 10% de los datos sean considerados anómalos
+            threshold_percentile = (1 - self.contamination) * 100
+            self._adjusted_threshold = float(np.percentile(anomaly_probs, threshold_percentile))
+            
+            print(f"🎯 Threshold calibrado: {self._adjusted_threshold:.4f} (contamination: {self.contamination})")
+            
+        except Exception as e:
+            print(f"⚠️ Error calibrando threshold: {e}")
+            self._adjusted_threshold = self.threshold
+    
     def _build_scaler(self) -> Optional[object]:
         """Construye el scaler apropiado."""
         if not SKLEARN_AVAILABLE:
@@ -162,8 +191,8 @@ class IsolationForestDetector(AnomalyDetector):
         else:
             return None
 
-    def _encode_logs(self, logs: List[LogEntry]) -> Optional[np.ndarray]:
-        """Transforma LogEntry list en matriz de features numéricas."""
+    def _encode_logs(self, logs: List[ThreatLogItemDTO]) -> Optional[np.ndarray]:
+        """Transforma ThreatLogItemDTO list en matriz de features numéricas."""
         if not NUMPY_AVAILABLE:
             print("❌ numpy no disponible para encoding")
             return None
@@ -214,7 +243,7 @@ class IsolationForestDetector(AnomalyDetector):
         
         return np.array(X)
 
-    def fit(self, logs: List[LogEntry]) -> None:
+    def fit(self, logs: List[ThreatLogItemDTO]) -> None:
         """Entrena el modelo con los logs proporcionados."""
         if not all([NUMPY_AVAILABLE, SKLEARN_AVAILABLE]):
             print("❌ Dependencias no disponibles para entrenamiento")
@@ -250,6 +279,9 @@ class IsolationForestDetector(AnomalyDetector):
         self._model.fit(X_scaled)
         print(f"✅ Modelo entrenado con {X_scaled.shape[1]} features")
         
+        # Calibrar threshold basado en contamination
+        self._calibrate_threshold_from_contamination(X_scaled)
+        
         # Guardar modelo y scaler si es posible
         if JOBLIB_AVAILABLE:
             try:
@@ -260,14 +292,15 @@ class IsolationForestDetector(AnomalyDetector):
                     'model': self._model,
                     'scaler': self._scaler,
                     'scaler_type': self.scaler_type,
-                    'feature_names': self._feature_names
+                    'feature_names': self._feature_names,
+                    'threshold': self._adjusted_threshold
                 }
                 joblib.dump(model_data, self.model_path)
                 print(f"💾 Modelo y scaler guardados en: {self.model_path}")
             except Exception as e:
                 print(f"⚠️ Error guardando modelo: {e}")
 
-    def detect_anomalies(self, logs: List[LogEntry]) -> AnomalyResult:
+    def detect_anomalies(self, logs: List[ThreatLogItemDTO]) -> AnomalyResult:
         """Detecta anomalías en un lote de logs."""
         if not logs:
             return AnomalyResult(
@@ -323,21 +356,22 @@ class IsolationForestDetector(AnomalyDetector):
         try:
             anomaly_scores = self._model.score_samples(X_scaled)
             # Convertir scores a probabilidades (0 = normal, 1 = anómalo)
-            anomaly_probs = 1.0 - anomaly_scores
+            # Isolation Forest scores are already in [-1, 1] range, normalize to [0, 1]
+            anomaly_probs = (anomaly_scores + 1) / 2  # Convert [-1, 1] to [0, 1]
             
             # Calcular score del batch con diferentes métricas
             batch_score_mean = float(np.mean(anomaly_probs))
             batch_score_median = float(np.median(anomaly_probs))
             batch_score_max = float(np.max(anomaly_probs))
             
-            # Detectar amenaza si algún score supera el umbral
-            threat_detected = bool(np.any(anomaly_probs > self.threshold))
+            # Detectar amenaza si algún score supera el umbral ajustado
+            threat_detected = bool(np.any(anomaly_probs > self._adjusted_threshold))
             
             # Calcular confianza mejorada
             confidence = self._calculate_confidence(anomaly_probs, X_scaled)
             
             # Calcular métricas adicionales
-            anomaly_count = int(np.sum(anomaly_probs > self.threshold))
+            anomaly_count = int(np.sum(anomaly_probs > self._adjusted_threshold))
             anomaly_ratio = float(anomaly_count / len(anomaly_probs))
             
             # Calcular severidad de la amenaza
@@ -380,7 +414,7 @@ class IsolationForestDetector(AnomalyDetector):
         log_entries = []
         for _, row in df.iterrows():
             try:
-                log_entry = LogEntry(
+                log_entry = ThreatLogItemWithLabelDTO(
                     session_id=str(row['session_id']),
                     network_packet_size=int(row['network_packet_size']),
                     protocol_type=str(row['protocol_type']),
@@ -438,7 +472,7 @@ class IsolationForestDetector(AnomalyDetector):
         """Verifica si el modelo está listo para inferencia."""
         return self._model is not None
     
-    def _calculate_evaluation_metrics(self, log_entries: List[LogEntry], X: np.ndarray) -> Dict[str, Any]:
+    def _calculate_evaluation_metrics(self, log_entries: List[ThreatLogItemDTO], X: np.ndarray) -> Dict[str, Any]:
         """Calcula métricas de evaluación robustas usando las etiquetas del dataset."""
         if not all([NUMPY_AVAILABLE, SKLEARN_AVAILABLE]) or self._model is None:
             return {}
@@ -620,6 +654,9 @@ class IsolationForestDetector(AnomalyDetector):
         try:
             from sklearn.calibration import calibration_curve
             
+            # Asegurar que las probabilidades estén en el rango [0, 1]
+            y_probs = np.clip(y_probs, 0.0, 1.0)
+            
             # Calcular curva de calibración
             fraction_of_positives, mean_predicted_value = calibration_curve(
                 y_true, y_probs, n_bins=10
@@ -658,7 +695,7 @@ class IsolationForestDetector(AnomalyDetector):
         except Exception as e:
             return {'error': f'Calibration calculation failed: {str(e)}'}
     
-    def optimize_hyperparameters(self, logs: List[LogEntry], cv_folds: int = 5) -> Dict[str, Any]:
+    def optimize_hyperparameters(self, logs: List[ThreatLogItemDTO], cv_folds: int = 5) -> Dict[str, Any]:
         """
         Optimiza los hiperparámetros del modelo usando validación cruzada.
         
@@ -751,7 +788,7 @@ class IsolationForestDetector(AnomalyDetector):
         
         return results
     
-    def calibrate_threshold(self, logs: List[LogEntry], target_fpr: float = 0.05) -> float:
+    def calibrate_threshold(self, logs: List[ThreatLogItemDTO], target_fpr: float = 0.05) -> float:
         """
         Calibra el threshold basado en la tasa de falsos positivos objetivo.
         
@@ -814,7 +851,7 @@ class IsolationForestDetector(AnomalyDetector):
         
         return threshold
     
-    def detect_outliers(self, logs: List[LogEntry], method: str = "iqr") -> List[bool]:
+    def detect_outliers(self, logs: List[ThreatLogItemDTO], method: str = "iqr") -> List[bool]:
         """
         Detecta outliers usando diferentes métodos.
         
@@ -881,7 +918,7 @@ class IsolationForestDetector(AnomalyDetector):
         print(f"🔍 Detectados {np.sum(outliers)} outliers usando método {method}")
         return outliers.tolist()
     
-    def get_anomaly_explanation(self, logs: List[LogEntry], log_index: int) -> Dict[str, Any]:
+    def get_anomaly_explanation(self, logs: List[ThreatLogItemDTO], log_index: int) -> Dict[str, Any]:
         """
         Proporciona explicación detallada de por qué un log es anómalo.
         
@@ -1040,7 +1077,7 @@ class IsolationForestDetector(AnomalyDetector):
         else:
             return "NONE"
     
-    def get_detailed_anomaly_analysis(self, logs: List[LogEntry]) -> Dict[str, Any]:
+    def get_detailed_anomaly_analysis(self, logs: List[ThreatLogItemDTO]) -> Dict[str, Any]:
         """
         Proporciona un análisis detallado de anomalías en un batch de logs.
         
@@ -1133,7 +1170,7 @@ class IsolationForestDetector(AnomalyDetector):
         
         return analysis
     
-    def generate_anomaly_report(self, logs: List[LogEntry]) -> Dict[str, Any]:
+    def generate_anomaly_report(self, logs: List[ThreatLogItemDTO]) -> Dict[str, Any]:
         """
         Genera un reporte completo de anomalías con explicaciones detalladas.
         
@@ -1376,7 +1413,7 @@ class IsolationForestDetector(AnomalyDetector):
         
         return recommendations
     
-    def detect_concept_drift(self, new_logs: List[LogEntry], drift_threshold: float = 0.1) -> Dict[str, Any]:
+    def detect_concept_drift(self, new_logs: List[ThreatLogItemDTO], drift_threshold: float = 0.1) -> Dict[str, Any]:
         """
         Detecta concept drift comparando la distribución de nuevas muestras con el modelo actual.
         
@@ -1528,7 +1565,7 @@ class IsolationForestDetector(AnomalyDetector):
         else:
             return "🔄 EVALUAR: Drift detectado, evaluar necesidad de retraining"
     
-    def retrain_model(self, new_logs: List[LogEntry], retrain_threshold: float = 0.15) -> Dict[str, Any]:
+    def retrain_model(self, new_logs: List[ThreatLogItemDTO], retrain_threshold: float = 0.15) -> Dict[str, Any]:
         """
         Reentrena el modelo si se detecta concept drift significativo.
         

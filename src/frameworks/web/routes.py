@@ -11,7 +11,6 @@ from fastapi.exceptions import RequestValidationError
 from ...frameworks.orchestration.langgraph_orchestrator import LangGraphPipelineOrchestrator
 
 from ...adapters.controllers.analysis_controller import AnalysisController
-from ...adapters.controllers.training_controller import TrainingController
 from ...adapters.controllers.dataset_controller import DatasetController
 from ...adapters.controllers.supervised_model_controller import SupervisedModelController
 from ...adapters.controllers.unsupervised_training_controller import UnsupervisedTrainingController
@@ -19,14 +18,12 @@ from ...adapters.controllers.health_controller import router as health_router
 from ...adapters.presenters.error_handler import ErrorHandler
 from ...adapters.gateways.anomaly_detector_gateway import AnomalyDetectorGateway
 from ...adapters.gateways.dataset_gateway import DatasetGateway
-
-from ...application.use_cases.analyze_logs import AnalyzeThreatLogsUseCase
-from ...application.use_cases.train_iot_model import TrainIoTModelUseCase
-from ...application.use_cases.train_iot_model_from_kaggle import TrainIoTModelFromKaggleUseCase
-from ...application.use_cases.train_supervised_model import TrainSupervisedModelUseCase
-from ...application.use_cases.train_unsupervised_model import TrainUnsupervisedModelUseCase
 from ...adapters.ml.supervised_model_adapter import SupervisedModelAdapter
 from ...adapters.ml.supervised_threat_detector_adapter import SupervisedThreatDetectorAdapter
+
+from ...application.use_cases.analyze_logs import AnalyzeThreatLogsUseCase
+from ...application.use_cases.train_supervised_model import TrainSupervisedModelUseCase
+from ...application.use_cases.train_unsupervised_model import TrainUnsupervisedModelUseCase
 from ...application.use_cases.get_dataset_info import GetDatasetInfoUseCase
 from ...application.use_cases.get_dataset_sample import GetDatasetSampleUseCase
 
@@ -71,8 +68,6 @@ def create_app() -> FastAPI:
     
     # Crear casos de uso
     analyze_use_case = AnalyzeThreatLogsUseCase(orchestrator, supervised_model_adapter)
-    train_use_case = TrainIoTModelUseCase(anomaly_detector)
-    train_from_kaggle_use_case = TrainIoTModelFromKaggleUseCase(anomaly_detector, dataset_gateway)
     train_supervised_use_case = TrainSupervisedModelUseCase(supervised_model_adapter)
     train_unsupervised_use_case = TrainUnsupervisedModelUseCase(anomaly_detector)
     get_info_use_case = GetDatasetInfoUseCase()
@@ -80,7 +75,6 @@ def create_app() -> FastAPI:
     
     # Crear controladores
     analysis_controller = AnalysisController(analyze_use_case)
-    training_controller = TrainingController(train_use_case, train_from_kaggle_use_case)
     supervised_model_controller = SupervisedModelController(train_supervised_use_case)
     unsupervised_training_controller = UnsupervisedTrainingController(train_unsupervised_use_case)
     dataset_controller = DatasetController(get_info_use_case, get_sample_use_case)
@@ -88,7 +82,6 @@ def create_app() -> FastAPI:
     # Registrar controladores
     app.include_router(health_router)
     app.include_router(analysis_controller.get_router())
-    app.include_router(training_controller.get_router())
     app.include_router(supervised_model_controller.get_router())
     app.include_router(unsupervised_training_controller.get_router())
     app.include_router(dataset_controller.get_router())
