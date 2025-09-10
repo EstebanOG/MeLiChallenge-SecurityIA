@@ -8,15 +8,18 @@ para detección de comportamientos anómalos.
 import os
 from typing import Dict, Any
 from ...domain.entities.dto import UnsupervisedTrainResponseDTO
-from ...domain.services.dataset_validation import is_dataset_available, get_dataset_availability_message
+from ...domain.interfaces.dataset_validation_interface import DatasetValidationInterface
 from ..interfaces.anomaly_detector import AnomalyDetector
 
 
 class TrainUnsupervisedModelUseCase:
     """Caso de uso para entrenar el modelo no supervisado."""
     
-    def __init__(self, anomaly_detector: AnomalyDetector, model_path: str = "models/isoforest.joblib"):
+    def __init__(self, anomaly_detector: AnomalyDetector, 
+                 dataset_validator: DatasetValidationInterface,
+                 model_path: str = "models/isoforest.joblib"):
         self.anomaly_detector = anomaly_detector
+        self.dataset_validator = dataset_validator
         self.model_path = model_path
     
     def execute(self) -> UnsupervisedTrainResponseDTO:
@@ -28,13 +31,13 @@ class TrainUnsupervisedModelUseCase:
         """
         try:
             # Verificar si el dataset está disponible
-            if not is_dataset_available():
-                raise FileNotFoundError(get_dataset_availability_message())
+            if not self.dataset_validator.is_dataset_available():
+                raise FileNotFoundError(self.dataset_validator.get_dataset_availability_message())
             
             # Verificar si el dataset existe
             dataset_path = "data/processed/dataset_complete.csv"
             if not os.path.exists(dataset_path):
-                raise FileNotFoundError(get_dataset_availability_message())
+                raise FileNotFoundError(self.dataset_validator.get_dataset_availability_message())
             
             # Entrenar el modelo
             metrics = self.anomaly_detector.fit_from_dataset(dataset_path)
