@@ -41,6 +41,11 @@ class UnsupervisedAgent:
             confidence = anomaly_result.get('confidence', 0.0)
             individual_scores = anomaly_result.get('anomaly_scores', [])
             
+            # Asegurar que siempre tengamos scores individuales
+            if not individual_scores and len(log_entries) > 0:
+                print("⚠️ [UNSUPERVISED] No se obtuvieron scores individuales del detector ML, generando fallback...")
+                is_anomalous, anomaly_score, confidence, individual_scores = self._detect_anomalies_fallback(logs)
+            
             # Normalizar scores de Isolation Forest a rango [0, 1]
             # Los scores de Isolation Forest pueden ser negativos y necesitan normalización
             if individual_scores:
@@ -75,13 +80,11 @@ class UnsupervisedAgent:
             # Verificar si el score normalizado sigue siendo irracionalmente alto
             if anomaly_score > 0.9:  # Threshold más conservador
                 print(f"⚠️ [UNSUPERVISED] Score ML muy alto después de normalización ({anomaly_score:.3f}), usando reglas heurísticas")
-                is_anomalous, anomaly_score, confidence = self._detect_anomalies_fallback(logs)
-                individual_scores = [anomaly_score] * len(logs)
+                is_anomalous, anomaly_score, confidence, individual_scores = self._detect_anomalies_fallback(logs)
         else:
             # Fallback a detección basada en reglas si no hay detector ML
             print("⚠️ [UNSUPERVISED] Usando detección basada en reglas (detector ML no disponible)")
-            is_anomalous, anomaly_score, confidence = self._detect_anomalies_fallback(logs)
-            individual_scores = [anomaly_score] * len(logs)
+            is_anomalous, anomaly_score, confidence, individual_scores = self._detect_anomalies_fallback(logs)
         
         if is_anomalous:
             threat_level = self._determine_threat_level(anomaly_score)
@@ -132,10 +135,10 @@ class UnsupervisedAgent:
                 continue
         return log_entries
     
-    def _detect_anomalies_fallback(self, logs: List[Dict[str, Any]]) -> tuple[bool, float, float]:
+    def _detect_anomalies_fallback(self, logs: List[Dict[str, Any]]) -> tuple[bool, float, float, List[float]]:
         """Detecta anomalías usando reglas heurísticas como fallback."""
         if not logs:
-            return False, 0.0, 0.0
+            return False, 0.0, 0.0, []
             
         anomaly_scores = []
         
@@ -168,7 +171,7 @@ class UnsupervisedAgent:
         is_anomalous = batch_score > 0.3  # Threshold para detección
         confidence = 0.7 if is_anomalous else 0.9  # Confianza basada en detección
         
-        return is_anomalous, batch_score, confidence
+        return is_anomalous, batch_score, confidence, anomaly_scores
     
     def _determine_threat_level(self, anomaly_score: float) -> str:
         """Determina el nivel de amenaza basado en el score de anomalía."""
