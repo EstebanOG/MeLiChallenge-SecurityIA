@@ -14,7 +14,9 @@ class TestLangGraphPipelineOrchestrator:
     
     def setup_method(self):
         """Configuración inicial para cada test."""
-        self.orchestrator = LangGraphPipelineOrchestrator()
+        from src.adapters.ml.supervised_threat_detector_adapter import SupervisedThreatDetectorAdapter
+        threat_detector = SupervisedThreatDetectorAdapter()
+        self.orchestrator = LangGraphPipelineOrchestrator(threat_detector)
         self.sample_logs = [
             {
                 "session_id": "session_001",
@@ -144,7 +146,9 @@ class TestLangGraphPipelineOrchestratorIntegration:
     
     def setup_method(self):
         """Configuración inicial para cada test."""
-        self.orchestrator = LangGraphPipelineOrchestrator()
+        from src.adapters.ml.supervised_threat_detector_adapter import SupervisedThreatDetectorAdapter
+        threat_detector = SupervisedThreatDetectorAdapter()
+        self.orchestrator = LangGraphPipelineOrchestrator(threat_detector)
         self.sample_logs = [
             {
                 "session_id": "session_001",
@@ -212,7 +216,9 @@ class TestLangGraphPipelineOrchestratorEdgeCases:
     
     def setup_method(self):
         """Configuración inicial para cada test."""
-        self.orchestrator = LangGraphPipelineOrchestrator()
+        from src.adapters.ml.supervised_threat_detector_adapter import SupervisedThreatDetectorAdapter
+        threat_detector = SupervisedThreatDetectorAdapter()
+        self.orchestrator = LangGraphPipelineOrchestrator(threat_detector)
     
     def test_graph_builder_error(self):
         """Test de error en la construcción del grafo."""

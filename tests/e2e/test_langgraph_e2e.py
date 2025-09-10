@@ -18,7 +18,9 @@ class TestLangGraphE2E:
     @pytest.fixture
     def orchestrator(self):
         """Fixture para el orquestador LangGraph."""
-        return LangGraphPipelineOrchestrator()
+        from src.adapters.ml.supervised_threat_detector_adapter import SupervisedThreatDetectorAdapter
+        threat_detector = SupervisedThreatDetectorAdapter()
+        return LangGraphPipelineOrchestrator(threat_detector)
     
     @pytest.fixture
     def sample_logs_attack(self):
