@@ -243,137 +243,43 @@ graph TB
 - **POST** `/train/supervised` → Entrenamiento del modelo supervisado
 - **POST** `/train/unsupervised` → Entrenamiento del modelo no supervisado
 
-## 📱 Estructura de Datos IoT
+### **Documentación**
+- **GET** `/docs` → Documentación Swagger UI interactiva
 
-### **Campos Requeridos:**
+## ESTRUCTURA DE LOGS
+
+### **Estructura del Request:**
 ```json
 {
-  "timestamp": "2025-01-20 12:00:00",
-  "device_id": "thermostat_001",
-  "device_type": "thermostat",
-  "cpu_usage": 75.5,
-  "memory_usage": 60.2,
-  "network_in_kb": 150,
-  "network_out_kb": 300,
-  "packet_rate": 450,
-  "avg_response_time_ms": 250.0,
-  "service_access_count": 5,
-  "failed_auth_attempts": 2,
-  "is_encrypted": 1,
-  "geo_location_variation": 5.5
+    "logs": [
+        {
+            "session_id": "sess_normal_typical",
+            "network_packet_size": 500,
+            "protocol_type": "TCP",
+            "login_attempts": 3,
+            "session_duration": 500.0,
+            "encryption_used": "AES",
+            "ip_reputation_score": 0.30,
+            "failed_logins": 1,
+            "browser_type": "Chrome",
+            "unusual_time_access": false
+        }
+    ]
 }
 ```
 
-### **Tipos de Dispositivos Soportados:**
-- **thermostat**: Termostatos inteligentes
-- **smart**: Dispositivos inteligentes generales
-- **sensor**: Sensores de monitoreo
-- **camera**: Cámaras de seguridad
-- **lock**: Cerraduras inteligentes
-- **hub**: Hubs centrales
-- **appliance**: Electrodomésticos inteligentes
-- **wearable**: Dispositivos portátiles
-
-## 🧪 Ejemplos de Uso
-
-### **1. Entrenar el Modelo desde Kaggle**
-```bash
-curl -X POST http://localhost:8000/train/iot/kaggle
-```
-
-**Nota**: El dataset se divide automáticamente en:
-- **80% sin etiquetas**: Para entrenamiento no supervisado
-- **20% con etiquetas**: Para calibración y optimización de thresholds
-
-**Respuesta:**
-```json
-{
-  "status": "trained_from_kaggle",
-  "samples": 1589,
-  "model_path": "models/isoforest.joblib",
-  "features": 11
-}
-```
-
-### **2. Analizar Dispositivos IoT**
-```bash
-curl -X POST "http://localhost:8000/analyze" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "logs": [{
-      "timestamp": "2025-01-20 12:00:00",
-      "device_id": "thermostat_001",
-      "device_type": "thermostat",
-      "cpu_usage": 75.5,
-      "memory_usage": 60.2,
-      "network_in_kb": 150,
-      "network_out_kb": 300,
-      "packet_rate": 450,
-      "avg_response_time_ms": 250.0,
-      "service_access_count": 5,
-      "failed_auth_attempts": 2,
-      "is_encrypted": 1,
-      "geo_location_variation": 5.5
-    }]
-  }'
-```
-
-**Respuesta:**
-```json
-{
-  "trace_id": "uuid-12345",
-  "score": 0.8234,
-  "decision": {
-    "trace_id": "uuid-12345",
-    "is_threat": true,
-    "confidence": 0.85,
-    "action_suggested": "alert",
-    "explanation": "Decision based on anomaly score=0.8234 for batch of 1 logs"
-  },
-  "batch_size": 1
-}
-```
-
-### **3. Obtener Información del Dataset**
-```bash
-curl http://localhost:8000/dataset/info
-```
-
-**Respuesta:**
-```json
-{
-  "total_rows": 10000,
-  "labeled_rows": 1589,
-  "unlabeled_rows": 8411,
-  "columns": ["timestamp", "device_id", ...],
-  "label_distribution": {
-    "Normal": 1263,
-    "Anomaly_DoS": 109,
-    "Anomaly_Injection": 109,
-    "Anomaly_Spoofing": 108
-  },
-  "device_type_distribution": {...},
-  "anomaly_ratio": 0.205
-}
-```
-
-## 📸 **IMÁGENES DE LA APLICACIÓN FUNCIONANDO**
-
-### **🎯 Capturas de Pantalla de la Aplicación en Acción**
-
+## **EJEMPLOS**
 > **Nota**: Las siguientes imágenes muestran la aplicación procesando datos, respondiendo a solicitudes y generando resultados esperados.
+### **1. Análisis Normal (Sin Amenazas)**
 
-#### **🖥️ Interfaz Principal**
-![Interfaz Principal](docs/images/main-interface.png)
-*Vista principal de la aplicación FastAPI con endpoints disponibles*
+![Análisis Normal](docs/images/normal-analysis.png)
+*Ejemplo de análisis de sesión normal sin amenazas detectadas*
 
-#### **📊 Análisis de Datos IoT**
-![Análisis IoT](docs/images/iot-analysis.png)
-*Procesamiento de logs IoT y detección de anomalías en tiempo real*
 
-#### **📋 Logs y Debugging**
-![Logs](docs/images/application-logs.png)
-*Logs de la aplicación mostrando el procesamiento de requests*
+### **2. Análisis con Amenaza Detectada**
+
+![Análisis con Amenaza](docs/images/threat-analysis.png)
+*Ejemplo de análisis de sesión con amenazas detectadas*
 
 
 ## SEGURIDAD Y DEPENDENCIAS
