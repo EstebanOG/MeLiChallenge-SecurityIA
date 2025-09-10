@@ -8,6 +8,7 @@ para detección de comportamientos anómalos.
 import os
 from typing import Dict, Any
 from ...domain.entities.dto import UnsupervisedTrainResponseDTO
+from ...domain.services.dataset_validation import is_dataset_available, get_dataset_availability_message
 from ..interfaces.anomaly_detector import AnomalyDetector
 
 
@@ -26,10 +27,14 @@ class TrainUnsupervisedModelUseCase:
             UnsupervisedTrainResponseDTO con el resultado del entrenamiento
         """
         try:
+            # Verificar si el dataset está disponible
+            if not is_dataset_available():
+                raise FileNotFoundError(get_dataset_availability_message())
+            
             # Verificar si el dataset existe
-            dataset_path = "notebooks/data/processed/dataset_complete.csv"
+            dataset_path = "data/processed/dataset_complete.csv"
             if not os.path.exists(dataset_path):
-                raise FileNotFoundError("Dataset no encontrado. Asegúrate de que el archivo esté en notebooks/data/processed/dataset_complete.csv")
+                raise FileNotFoundError(get_dataset_availability_message())
             
             # Entrenar el modelo
             metrics = self.anomaly_detector.fit_from_dataset(dataset_path)
