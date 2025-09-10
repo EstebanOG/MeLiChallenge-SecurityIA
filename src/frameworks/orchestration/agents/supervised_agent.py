@@ -7,7 +7,7 @@ usando el framework LangGraph.
 
 from typing import List, Dict, Any, Optional
 from .base_agent import LangGraphAgentState, add_execution_step
-from ....application.interfaces.threat_detector_interface import ThreatDetectorInterface
+from src.application.interfaces.threat_detector_interface import ThreatDetectorInterface
 
 
 class SupervisedAgent:
