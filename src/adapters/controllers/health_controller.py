@@ -19,7 +19,6 @@ def health():
         dataset="Anomaly Detection and Threat Intelligence"
     )
 
-#TODO: Add features
 @router.get("/", response_model=InfoResponseDTO)
 def get_info():
     """Obtiene información sobre el proyecto y el modelo."""
@@ -28,6 +27,17 @@ def get_info():
         version="2.1.0",
         description="API para detección de anomalías y análisis de threat intelligence en logs de seguridad",
         features=[
-            "Detección de anomalías en tiempo real"
+            "Detección de anomalías en tiempo real",
+            "Pipeline de agentes inteligentes (Supervised, Unsupervised, Decision, Report)",
+            "Modelado de amenazas con frameworks STRIDE y MITRE ATT&CK",
+            "Detección de intrusiones en sesiones de red",
+            "Análisis de comportamiento de autenticación",
+            "Indicadores de Compromiso (IoC) automatizados",
+            "Entrenamiento de modelos supervisados y no supervisados",
+            "Integración con datasets de Kaggle",
+            "Arquitectura Clean Architecture",
+            "Documentación interactiva con Swagger UI",
+            "Pruebas automatizadas (Unit, Integration, E2E)",
+            "Integración con Snyk para seguridad de dependencias"
         ]
     )

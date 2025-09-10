@@ -6,9 +6,10 @@ y muestras del dataset procesado.
 """
 
 from fastapi import APIRouter, HTTPException
-from ...domain.entities.dto import DatasetInfoDTO, DatasetSampleDTO
+from ...domain.entities.dto import DatasetInfoDTO, DatasetSampleDTO, DatasetDownloadResponseDTO
 from ...application.use_cases.get_dataset_info import GetDatasetInfoUseCase
 from ...application.use_cases.get_dataset_sample import GetDatasetSampleUseCase
+from ...application.use_cases.download_dataset_from_kaggle import DownloadDatasetFromKaggleUseCase
 
 
 class DatasetController:
@@ -17,10 +18,12 @@ class DatasetController:
     def __init__(
         self, 
         get_info_use_case: GetDatasetInfoUseCase,
-        get_sample_use_case: GetDatasetSampleUseCase
+        get_sample_use_case: GetDatasetSampleUseCase,
+        download_use_case: DownloadDatasetFromKaggleUseCase
     ):
         self.get_info_use_case = get_info_use_case
         self.get_sample_use_case = get_sample_use_case
+        self.download_use_case = download_use_case
         self.router = APIRouter()
         self._setup_routes()
     
@@ -64,6 +67,22 @@ class DatasetController:
                 raise HTTPException(
                     status_code=500, 
                     detail=f"Error obteniendo muestra: {str(e)}"
+                )
+        
+        @self.router.post("/dataset/download", response_model=DatasetDownloadResponseDTO)
+        def download_dataset_from_kaggle():
+            """
+            Descarga el dataset de detección de intrusiones desde Kaggle y lo procesa.
+            
+            Returns:
+                Información sobre la descarga del dataset
+            """
+            try:
+                return self.download_use_case.execute()
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500, 
+                    detail=f"Error descargando dataset: {str(e)}"
                 )
     
     def get_router(self):

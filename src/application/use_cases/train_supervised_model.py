@@ -8,14 +8,18 @@ para detección de ataques conocidos.
 import os
 from typing import Dict, Any
 from ...domain.entities.dto import SupervisedTrainResponseDTO
+from ...domain.interfaces.dataset_validation_interface import DatasetValidationInterface
 from ..interfaces.supervised_model_interface import SupervisedModelInterface
 
 
 class TrainSupervisedModelUseCase:
     """Caso de uso para entrenar el modelo supervisado."""
     
-    def __init__(self, supervised_model: SupervisedModelInterface, model_path: str = "models/supervised_model.joblib"):
+    def __init__(self, supervised_model: SupervisedModelInterface, 
+                 dataset_validator: DatasetValidationInterface,
+                 model_path: str = "models/supervised_model.joblib"):
         self.supervised_model = supervised_model
+        self.dataset_validator = dataset_validator
         self.model_path = model_path
     
     def execute(self) -> SupervisedTrainResponseDTO:
@@ -26,10 +30,14 @@ class TrainSupervisedModelUseCase:
             SupervisedTrainResponseDTO con el resultado del entrenamiento
         """
         try:
+            # Verificar si el dataset está disponible
+            if not self.dataset_validator.is_dataset_available():
+                raise FileNotFoundError(self.dataset_validator.get_dataset_availability_message())
+            
             # Verificar si el dataset existe
-            dataset_path = "notebooks/data/processed/dataset_complete.csv"
+            dataset_path = "data/processed/dataset_complete.csv"
             if not os.path.exists(dataset_path):
-                raise FileNotFoundError("Dataset no encontrado. Asegúrate de que el archivo esté en notebooks/data/processed/dataset_complete.csv")
+                raise FileNotFoundError(self.dataset_validator.get_dataset_availability_message())
             
             # Entrenar el modelo
             metrics = self.supervised_model.train(dataset_path)

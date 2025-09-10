@@ -1,5 +1,5 @@
 """
-Configuración del dominio para datasets de IoT.
+Configuración del dominio para dataset de detección de intrusiones de ciberseguridad.
 
 Este archivo contiene las entidades y configuraciones del dominio
 relacionadas con la gestión de datasets, no detalles de infraestructura.
@@ -7,13 +7,13 @@ relacionadas con la gestión de datasets, no detalles de infraestructura.
 
 from pathlib import Path
 
-# Directorios de datos (configuración del dominio)
+# Directorios de datos
 DATA_DIR = Path("data")
 RAW_DATA_DIR = DATA_DIR / "raw"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 
-# Dataset por defecto (entidad del dominio) - Dataset válido y disponible
-DEFAULT_IOT_DATASET = "ziya07/anomaly-detection-and-threat-intelligence-dataset"
+# Dataset
+DEFAULT_DATASET = "dnkumars/cybersecurity-intrusion-detection-dataset"
 
 # Configuración de división del dataset (reglas de negocio)
 DEFAULT_LABELED_RATIO = 0.2

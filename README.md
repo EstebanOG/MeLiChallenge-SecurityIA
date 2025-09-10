@@ -23,6 +23,41 @@ Este proyecto ha sido adaptado para trabajar con el dataset **"Cybersecurity Int
 
 ## Ejecutar Localmente
 
+### **Configuración de API Key de Gemini**
+
+El sistema utiliza **Google Gemini** para el procesamiento de lenguaje natural en los agentes inteligentes. Necesitas configurar tu API key:
+
+#### **Opción 1: Variable de Entorno (Recomendado)**
+```bash
+# Windows (PowerShell)
+$env:GEMINI_API_KEY="tu_api_key_aqui"
+
+# Windows (CMD)
+set GEMINI_API_KEY=tu_api_key_aqui
+
+# Linux/Mac
+export GEMINI_API_KEY="tu_api_key_aqui"
+```
+
+#### **Opción 2: Archivo de Configuración**
+```bash
+# 1. Copia la plantilla de configuración
+cp api_config_dev.py api_config.py
+
+# 2. Edita el archivo api_config.py y reemplaza:
+GEMINI_API_KEY = "tu_gemini_api_key_aqui"  # Con tu API key real
+```
+
+**Nota**: El archivo `api_config.py` está en `.gitignore` para proteger tu API key.
+
+#### **Obtener tu API Key de Gemini**
+1. Ve a [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Inicia sesión con tu cuenta de Google
+3. Crea una nueva API key
+4. Copia la key generada
+
+### **Instalación y Ejecución**
+
 ```bash
 # 1. Crear entorno virtual
 python -m venv .venv
@@ -31,7 +66,18 @@ source .venv/bin/activate   # En Windows: .venv\\Scripts\\Activate
 # 2. Instalar dependencias
 pip install -r requirements.txt
 
-# 3. Iniciar la API
+# 3. Configurar API key (elegir una opción)
+# Opción A: Variable de entorno
+export GEMINI_API_KEY="tu_api_key_aqui"
+
+# Opción B: Archivo de configuración
+cp api_config_dev.py api_config.py
+# Editar api_config.py y reemplazar "tu_gemini_api_key_aqui" con tu key real
+
+# 4. Verificar configuración
+python api_config.py
+
+# 5. Iniciar la API
 python wsgi.py  # inicia uvicorn en reload
 ```
 
