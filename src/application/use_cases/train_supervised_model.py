@@ -55,7 +55,7 @@ class TrainSupervisedModelUseCase:
                 success=True,
                 message=f"Modelo supervisado entrenado exitosamente. AUC: {metrics['auc_score']:.4f}, Precisión: {metrics['precision']:.4f}, Recall: {metrics['recall']:.4f}, F1: {metrics['f1_score']:.4f}",
                 model_path=self.model_path,
-                training_time=None,
+                training_time=metrics.get('training_time'),
                 metrics=response_metrics
             )
             

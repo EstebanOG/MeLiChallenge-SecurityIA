@@ -41,23 +41,44 @@ class TestAnalyzeThreatLogsUseCase:
         """Test de ejecución exitosa del análisis."""
         # Configurar mocks
         self.mock_supervised_model.is_trained.return_value = True
-        mock_response = {
-            'success': True,
-            'message': "Análisis completado exitosamente",
-            'execution_id': "exec_123",
-            'agent_results': {
-                "supervised_agent": {
-                    "decision": "attack_known",
-                    "confidence": 0.85,
-                    "threat_level": "high"
-                }
-            },
-            'final_decision': "block",
-            'confidence': 0.85,
-            'threat_level': "high",
-            'reasoning': "Ataque detectado con alta confianza"
+        
+        # Crear mocks de los resultados de agentes
+        mock_supervised_result = Mock()
+        mock_supervised_result.output = {
+            "decision": "attack_known",
+            "confidence": 0.85,
+            "threat_level": "high"
         }
-        self.mock_orchestrator.execute_pipeline.return_value = mock_response
+        
+        mock_unsupervised_result = Mock()
+        mock_unsupervised_result.output = {
+            "decision": "normal",
+            "confidence": 0.70
+        }
+        
+        mock_decision_result = Mock()
+        mock_decision_result.output = {
+            "action": "block",
+            "confidence": 0.85,
+            "reasoning": "Ataque detectado con alta confianza"
+        }
+        
+        mock_report_result = Mock()
+        mock_report_result.output = {
+            "message": "Análisis completado exitosamente"
+        }
+        
+        # Crear mock del resultado de ejecución
+        mock_execution_result = Mock()
+        mock_execution_result.get_agent_result.side_effect = lambda agent_type: {
+            AgentType.INGESTION: mock_supervised_result,
+            AgentType.ANALYSIS: mock_unsupervised_result,
+            AgentType.DECISION: mock_decision_result,
+            AgentType.NOTIFICATION: mock_report_result
+        }.get(agent_type)
+        mock_execution_result.context.trace_id = "exec_123"
+        
+        self.mock_orchestrator.execute_pipeline.return_value = mock_execution_result
         
         # Datos de entrada
         request = ThreatAnalyzeRequestDTO(
@@ -81,12 +102,14 @@ class TestAnalyzeThreatLogsUseCase:
         result = self.use_case.execute(request)
         
         # Verificar
-        assert result.success == True
-        assert "Análisis completado exitosamente" in result.message
-        assert result.execution_id == "exec_123"
-        assert result.final_decision == "block"
-        assert result.confidence == 0.85
-        assert result.threat_level == "high"
+        assert result.trace_id == "exec_123"
+        assert result.score == 0.8  # threat_detected = True
+        assert result.decision["action"] == "block"
+        assert result.decision["confidence"] == 0.85
+        assert result.decision["threat_detected"] == True
+        assert result.decision["anomaly_detected"] == False
+        assert "Ataque detectado con alta confianza" in result.decision["reasoning"]
+        assert result.batch_size == 1
         
         # Verificar que se llamaron los métodos
         self.mock_supervised_model.is_trained.assert_called_once()
@@ -172,17 +195,13 @@ class TestAnalyzeThreatLogsUseCase:
         """Test de ejecución con logs vacíos."""
         # Configurar mocks
         self.mock_supervised_model.is_trained.return_value = True
-        mock_response = {
-            'success': True,
-            'message': "Análisis completado sin logs",
-            'execution_id': "exec_empty",
-            'agent_results': {},
-            'final_decision': "allow",
-            'confidence': 0.95,
-            'threat_level': "low",
-            'reasoning': "Sin logs para analizar"
-        }
-        self.mock_orchestrator.execute_pipeline.return_value = mock_response
+        
+        # Crear mocks de los resultados de agentes (todos None para logs vacíos)
+        mock_execution_result = Mock()
+        mock_execution_result.get_agent_result.return_value = None
+        mock_execution_result.context.trace_id = "exec_empty"
+        
+        self.mock_orchestrator.execute_pipeline.return_value = mock_execution_result
         
         # Datos de entrada con logs vacíos
         request = ThreatAnalyzeRequestDTO(logs=[])
@@ -191,10 +210,13 @@ class TestAnalyzeThreatLogsUseCase:
         result = self.use_case.execute(request)
         
         # Verificar
-        assert result.success == True
-        assert result.final_decision == "allow"
-        assert result.confidence == 0.95
-        assert result.threat_level == "low"
+        assert result.trace_id == "exec_empty"
+        assert result.score == 0.2  # Sin amenazas detectadas
+        assert result.decision["action"] == "monitor"
+        assert result.decision["confidence"] == 0.0
+        assert result.decision["threat_detected"] == False
+        assert result.decision["anomaly_detected"] == False
+        assert result.batch_size == 0
     
     def test_is_supervised_model_trained_true(self):
         """Test de verificación cuando el modelo está entrenado."""
