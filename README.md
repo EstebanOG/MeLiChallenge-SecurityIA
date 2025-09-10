@@ -455,16 +455,7 @@ curl -X POST "http://localhost:8000/analyze" \
 - **Dataset Original**: [Kaggle - IoT Anomaly Detection](https://www.kaggle.com/datasets/ziya07/anomaly-detection-and-threat-intelligence-dataset)
 - **Notebook de EDA**: [02_EDA_IoT_Anomaly_Detection.ipynb](notebooks/EDA_IoT_Anomaly_Detection.ipynb)
 
-## 🏗️ Notas de Diseño
 
-- **Capa `domain`**: Contratos y entidades puras (sin dependencias externas)
-- **Capa `application`**: Casos de uso que orquestan puertos del dominio
-- **Capa `infrastructure`**: Implementaciones concretas (adaptadores) de puertos
-- **Capa `orchestration`**: Pipeline de agentes LangGraph para análisis inteligente
-- **Capa `presentation`**: Framework FastAPI y capa HTTP
-
-
----
 
 ## 📸 **IMÁGENES DE LA APLICACIÓN FUNCIONANDO**
 
@@ -484,7 +475,20 @@ curl -X POST "http://localhost:8000/analyze" \
 ![Logs](docs/images/application-logs.png)
 *Logs de la aplicación mostrando el procesamiento de requests*
 
----
-## 📄 Licencia
+
+## SEGURIDAD Y DEPENDENCIAS
+
+### **Integración con Snyk**
+
+Este repositorio está integrado con **Snyk** para la revisión continua de dependencias y detección de vulnerabilidades de seguridad.
+
+#### **Estado de la Integración:**
+- **Repositorio enlazado** a cuenta de Snyk
+- **Escaneo automático** de dependencias en cada push/PR
+- **Detección de vulnerabilidades** conocidas en librerías Python
+- **Recomendaciones de actualización** para paquetes vulnerables
+- **Reportes de seguridad** detallados con niveles de severidad
+
+## LICENCIA
 
 Este proyecto está bajo la licencia especificada en el archivo [LICENSE](LICENSE).
