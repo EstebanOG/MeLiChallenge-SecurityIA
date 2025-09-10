@@ -1,309 +1,25 @@
-# 🔍 MeLiChallenge-SecurityIA: IoT Anomaly Detection API
+# MeLiChallenge-SecurityIA: Network Session Anomaly Detection API
 
-API FastAPI para detección de anomalías en dispositivos IoT y sistemas inteligentes.
+API FastAPI para detección de anomalías en sesiones de red y comportamiento de autenticación.
 
 ## **SOLUCIÓN AL RETO DE MELI - DETECCIÓN INTELIGENTE DE AMENAZAS**
 
 Este proyecto representa mi solución al **Reto de Desarrollo y Seguridad de Mercado Libre (MELI)**, que busca implementar un módulo backend utilizando modelos de Inteligencia Artificial para la detección inteligente de comportamientos anómalos en registros de acceso. El desafío requiere conocimientos en redes, infraestructura, desarrollo de soluciones, IA y bases de datos, implementando una canalización de detección de anomalías con agentes inteligentes que procesen registros y sugieran acciones de seguridad como bloquear, alertar u otra.
 
-## **Dataset de IoT Anomaly Detection**
+## **Dataset de Network Session Anomaly Detection**
 
-Este proyecto ha sido adaptado para trabajar con el dataset **"Anomaly Detection and Threat Intelligence Dataset"** de Kaggle, que contiene métricas de dispositivos IoT para la detección de anomalías y amenazas de seguridad.
+Este proyecto ha sido adaptado para trabajar con el dataset **"Cybersecurity Intrusion Detection Dataset"** de Kaggle, que contiene métricas de sesiones de red para la detección de intrusiones y amenazas de seguridad.
 
 ### **Características del Dataset:**
-- **10,000 registros** de dispositivos IoT
-- **4 clases**: Normal, Anomaly_DoS, Anomaly_Injection, Anomaly_Spoofing
-- **8 tipos de dispositivos**: thermostat, smart, sensor, camera, lock, hub, appliance, wearable
-- **Métricas de rendimiento**: CPU, memoria, red, autenticación, ubicación geográfica
-
-## **Análisis de Amenazas: STRIDE + MITRE ATT&CK**
-
-Se realizó un **modelado de amenazas** aplicando frameworks de ciberseguridad estándar de la industria:
-
-- **STRIDE**: Para categorización conceptual de amenazas
-- **MITRE ATT&CK**: Para mapeo a técnicas reales de atacantes
-- **IoC**: Indicadores de compromiso calculables del dataset
-
-### Resultados Clave
-
-- **9 amenazas mapeadas** a técnicas MITRE ATT&CK específicas
-- **8 técnicas** identificadas (T1110, T1040, T1041, T1499, T1496, T1055, T1078, T1087)
-
-### Matriz de Amenazas
-
-| Feature (Dataset) | STRIDE (Categoría) | Amenaza Detectada | MITRE ATT&CK (Técnica) | IoC Propuesto | Estadísticas del Feature |
-|-------------------|-------------------|-------------------|------------------------|---------------|--------------------------|
-| `failed_auth_attempts` | **Spoofing** | Credential Stuffing / Brute Force | **T1110 - Brute Force** | >5 intentos en <1 min por dispositivo | **Min:** 0.00, **Max:** 10.00, **P95:** 10.00 |
-| `is_encrypted` | **Information Disclosure** | Tráfico sin cifrar interceptado | **T1040 - Network Sniffing** | is_encrypted = 0 + tráfico > umbral | **Min:** 0.00, **Max:** 1.00, **P95:** 1.00 |
-| `network_out_kb` | **Information Disclosure** | Exfiltración de datos | **T1041 - Exfiltration Over C2** | valores outlier sobre p95 | **Min:** 10.00, **Max:** 1499.00, **P95:** 1425.00 |
-| `packet_rate` | **Denial of Service** | Denegación de servicio por ráfaga de paquetes | **T1499 - Endpoint DoS** | >1000 pkt/s o outlier | **Min:** 5.00, **Max:** 999.00, **P95:** 947.00 |
-| `cpu_usage` | **Tampering** | Uso abusivo de recursos / Cryptojacking | **T1496 - Resource Hijacking** | rolling average >80% sostenido | **Min:** 10.01, **Max:** 89.99, **P95:** 86.38 |
-| `memory_usage` | **Tampering** | Exploitation / consumo excesivo de memoria | **T1055 - Process Injection** | rolling average >90% | **Min:** 10.03, **Max:** 84.99, **P95:** 81.21 |
-| `geo_location_variation` | **Spoofing** | Account Takeover / Impossible Travel | **T1078 - Valid Accounts** | variación > 15% | **Min:** 0.00, **Max:** 20.00, **P95:** 19.03 |
-| `service_access_count` | **Tampering / Recon** | Enumeración de servicios | **T1087 - Account Discovery** | outlier sobre p95 | **Min:** 1.00, **Max:** 9.00, **P95:** 9.00 |
-| `avg_response_time_ms` | **Denial of Service** | Degradación de servicio / DoS | **T1499 - Endpoint DoS** | valores sobre p95 | **Min:** 20.08, **Max:** 499.95, **P95:** 476.42 |
+- **9,537 registros** de sesiones de red
+- **2 clases**: Normal (0), Ataque (1)
+- **3 tipos de protocolo**: TCP, UDP, ICMP
+- **3 tipos de encriptación**: AES, DES, None
+- **5 tipos de navegador**: Chrome, Firefox, Edge, Safari, Unknown
+- **Métricas de comportamiento**: Autenticación, duración de sesión, reputación IP, tamaño de paquetes
 
 
-
-### Detección de Amenazas con IoCs
-
-#### Metodología
-
-Implementamos **Indicadores de Compromiso (IoC)** basados en las reglas de amenazas identificadas:
-
-- **Detección de Fuerza Bruta**: >5 intentos fallidos en <1 min
-- **Detección de Exfiltración**: Valores outlier sobre percentil 95
-- **Detección de DoS**: >1000 pkt/s o valores anómalos
-- **Detección de Abuso de Recursos**: CPU >80% sostenido
-
-#### Rendimiento de IoCs
-
-- **Precisión**: 20.0% (muchos falsos positivos)
-- **Recall**: 39.5% (detecta ~40% de amenazas reales)
-- **F1-Score**: 26.6% (necesita mejora)
-
-#### Análisis por Tipo de Amenaza
-
-- **Anomaly_DoS**: 39.5% detectado
-- **Anomaly_Spoofing**: 40.7% detectado  
-- **Anomaly_Injection**: 38.5% detectado
-
-**[Ver análisis completo y métricas detalladas](notebooks/Threat_Model.ipynb)**
-
----
-
-## 🏗️ **CLEAN ARCHITECTURE - IMPLEMENTACIÓN VALIDADA**
-
-Este proyecto implementa **excelentemente** los principios de Clean Architecture de Robert C. Martin, con separación clara de capas y dependencias que apuntan hacia adentro.
-
-### **📐 PRINCIPIOS IMPLEMENTADOS:**
-
-✅ **Dependencias apuntan hacia adentro** - Solo las capas externas dependen de las internas  
-✅ **Inversión de dependencias** - Las capas internas definen interfaces, las externas las implementan  
-✅ **Separación de responsabilidades** - Cada capa tiene una responsabilidad única y bien definida  
-✅ **Entidades puras** - El dominio no tiene dependencias externas  
-✅ **Casos de uso orquestadores** - La aplicación coordina sin conocer detalles técnicos  
-
-### **🏛️ DIAGRAMA DE ARQUITECTURA:**
-
-```mermaid
-graph TB
-    %% Definición de estilos
-    classDef presentationLayer fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    classDef applicationLayer fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef domainLayer fill:#e8f5e8,stroke:#1b5e20,stroke-width:3px
-    classDef infrastructureLayer fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef orchestrationLayer fill:#fce4ec,stroke:#880e4f,stroke-width:2px
-    
-    %% Capa de Presentación
-    subgraph PRESENTATION ["🌐 PRESENTATION LAYER"]
-        A[FastAPI Routes<br/>HTTP Controllers]
-        A1[analyze endpoint]
-        A2[train iot endpoint]
-        A3[health endpoint]
-        A4[info endpoint]
-    end
-    
-    %% Capa de Aplicación
-    subgraph APPLICATION ["🔄 APPLICATION LAYER"]
-        B[Use Cases<br/>Casos de Uso]
-        B1[AnalyzeLogsUseCase]
-        B2[TrainModelUseCase]
-        B3[DatasetManagementUseCase]
-    end
-    
-    %% Capa de Dominio
-    subgraph DOMAIN ["🎯 DOMAIN LAYER"]
-        C[Entities<br/>Entidades]
-        C1[LogEntry]
-        C2[AnomalyResult]
-        C3[DeviceType]
-        
-        D[Interfaces<br/>Puertos]
-        D1[AnomalyDetector]
-        D2[DatasetService]
-        D3[TrainingService]
-    end
-    
-    %% Capa de Infraestructura
-    subgraph INFRASTRUCTURE ["🔌 INFRASTRUCTURE LAYER"]
-        E[Detectors<br/>Implementaciones]
-        E1[IsolationForestDetector]
-        E2[LOFDetector<br/>futuro]
-        E3[AutoEncoderDetector<br/>futuro]
-        
-        F[Services<br/>Servicios]
-        F1[IoTDatasetService]
-        F2[KaggleService]
-        F3[ModelPersistenceService]
-    end
-    
-    %% Capa de Orquestación
-    subgraph ORCHESTRATION ["🎭 ORCHESTRATION LAYER"]
-        G[LangGraph Pipeline<br/>Agentes Inteligentes]
-        G1[Ingestion Agent]
-        G2[ML Scoring Agent]
-        G3[Decision Agent]
-    end
-    
-    %% Flujo de dependencias
-    A --> B
-    B --> D
-    E --> D
-    G --> E
-    
-    %% Aplicar estilos
-    class A,A1,A2,A3,A4 presentationLayer
-    class B,B1,B2,B3 applicationLayer
-    class C,C1,C2,C3,D,D1,D2,D3 domainLayer
-    class E,E1,E2,E3,F,F1,F2,F3 infrastructureLayer
-    class G,G1,G2,G3 orchestrationLayer
-```
-
-### **🔒 FLUJO DE DEPENDENCIAS:**
-
-```mermaid
-flowchart LR
-    subgraph FLOW ["Flujo de Dependencias"]
-        P[🌐 Presentation] --> A[🔄 Application]
-        A --> D[🎯 Domain]
-        I[🔌 Infrastructure] --> D
-        O[🎭 Orchestration] --> I
-    end
-    
-    P -.->|"depende de"| A
-    A -.->|"depende de"| D
-    I -.->|"implementa"| D
-    O -.->|"usa"| I
-    
-    classDef flowStyle fill:#f0f8ff,stroke:#4169e1,stroke-width:2px
-    class P,A,D,I,O flowStyle
-```
-
-### **📁 ESTRUCTURA DE ARCHIVOS:**
-
-```
-src/
-├── 🎯 domain/                    # 🟢 NÚCLEO (sin dependencias externas)
-│   ├── entities/
-│   │   └── log_entry.py         # Entidad IoT pura (dataclass)
-│   └── interfaces/
-│       └── anomaly_detector.py  # Puerto: contrato abstracto
-│
-├── 🔄 application/               # 🟡 CASOS DE USO (orquestadores)
-│   └── use_cases/
-│       └── analyze_logs.py      # Lógica de negocio que coordina puertos
-│
-├── 🔌 infrastructure/            # 🔴 IMPLEMENTACIONES (adaptadores)
-│   ├── detectors/
-│   │   └── ml_isolation_forest_detector.py  # Implementa AnomalyDetector
-│   └── services/
-│       ├── iot_dataset_service.py            # Servicio para dataset IoT
-│       └── kaggle_service.py                # Descarga dataset (kagglehub)
-│
-├── 🎭 orchestration/             # 🟠 PIPELINE DE AGENTES
-│   └── langgraph/
-│       ├── agents.py             # Agentes de ingestión y decisión
-│       └── graph.py              # Pipeline de agentes LangGraph
-│
-└── 🌐 presentation/              # 🔵 CAPA HTTP (FastAPI)
-    └── fastapi_app/
-        ├── __init__.py           # App factory FastAPI
-        └── routes.py             # Controllers HTTP adaptados para IoT
-```
-
-### **🤖 PIPELINE DE AGENTES LANGGRAPH:**
-
-Tu proyecto incluye un sistema de agentes inteligentes que orquesta el análisis de anomalías IoT. Este pipeline implementa **Clean Architecture** manteniendo la separación de responsabilidades.
-
-#### **🎭 ARQUITECTURA DE AGENTES:**
-
-```mermaid
-graph TB
-    %% Estilos para agentes
-    classDef agentStyle fill:#fce4ec,stroke:#880e4f,stroke-width:3px
-    classDef stateStyle fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
-    
-    %% Estados del pipeline
-    subgraph STATES ["Estados del Pipeline"]
-        S1[logs List]
-        S2[trace_id]
-        S3[ingestion Output]
-        S4[batch_score]
-        S5[batch_is_threat]
-        S6[decision Output]
-    end
-    
-    %% Agentes
-    subgraph AGENTS ["Agentes Inteligentes"]
-        A1[Ingestion Agent<br/>Validación y Sanitización]
-        A2[ML Scoring Agent<br/>Análisis con Isolation Forest]
-        A3[Decision Agent<br/>Sugerencia de Acciones]
-    end
-    
-    %% Flujo del pipeline
-    S1 --> A1
-    A1 --> S3
-    S3 --> A2
-    A2 --> S4
-    A2 --> S5
-    S4 --> A3
-    S5 --> A3
-    A3 --> S6
-    
-    %% Aplicar estilos
-    class S1,S2,S3,S4,S5,S6 stateStyle
-    class A1,A2,A3 agentStyle
-```
-
-#### **🔄 FLUJO DE EJECUCIÓN DE AGENTES:**
-
-```mermaid
-sequenceDiagram
-    participant Client as 🌐 Cliente HTTP
-    participant Routes as 🚦 FastAPI Routes
-    participant Pipeline as 🎭 LangGraph Pipeline
-    participant Ingestion as 🔍 Ingestion Agent
-    participant MLScoring as 🤖 ML Scoring Agent
-    participant Decision as 🎯 Decision Agent
-    participant Detector as 🔌 IsolationForestDetector
-    
-    Note over Client,Detector: Pipeline de Agentes para Análisis IoT
-    
-    Client->>Routes: POST /analyze
-    Routes->>Pipeline: run_agents_pipeline(logs, trace_id)
-    
-    Note over Pipeline: 🚀 INICIO DEL PIPELINE
-    
-    Pipeline->>Ingestion: Ejecutar Ingestion Agent
-    Ingestion->>Ingestion: Validar datos IoT
-    Ingestion->>Ingestion: Sanitizar métricas
-    Ingestion-->>Pipeline: IngestionOutput
-    
-    Note over Pipeline: 🔍 DATOS VALIDADOS Y SANITIZADOS
-    
-    Pipeline->>MLScoring: Ejecutar ML Scoring Agent
-    MLScoring->>Detector: IsolationForestDetector.analyze()
-    Detector->>Detector: Procesar con Isolation Forest
-    Detector-->>MLScoring: AnomalyResult
-    MLScoring-->>Pipeline: batch_score + batch_is_threat
-    
-    Note over Pipeline: 🤖 SCORE DE ANOMALÍA CALCULADO
-    
-    Pipeline->>Decision: Ejecutar Decision Agent
-    Decision->>Decision: Analizar score y métricas
-    Decision->>Decision: Determinar acción sugerida
-    Decision-->>Pipeline: DecisionOutput
-    
-    Note over Pipeline: 🎯 ACCIÓN SUGERIDA GENERADA
-    
-    Pipeline-->>Routes: Resultado completo del pipeline
-    Routes-->>Client: JSON Response con análisis completo
-    
-    Note over Client,Detector: ✅ PIPELINE COMPLETADO EXITOSAMENTE
-```
-
-## 🚀 Ejecutar Localmente
+## Ejecutar Localmente
 
 ```bash
 # 1. Crear entorno virtual
@@ -318,6 +34,200 @@ python wsgi.py  # inicia uvicorn en reload
 ```
 
 La API estará disponible en: `http://localhost:8000`
+
+## Pruebas
+
+El proyecto incluye pruebas automatizadas organizadas por tipo y alcance.
+
+### **Tipos de Pruebas Disponibles**
+
+| Tipo | Descripción | Comando |
+|------|-------------|---------|
+| **Unit** | Pruebas de componentes individuales | `python run_tests.py unit` | 
+| **Integration** | Pruebas de interacción entre componentes | `python run_tests.py integration` | 
+| **E2E** | Pruebas del flujo completo con datos reales | `python run_tests.py e2e` | 
+| **All** | Ejecuta todos los tipos de pruebas | `python run_tests.py all` | 
+
+### **Ejecutar Pruebas**
+
+```bash
+# Pruebas unitarias
+python run_tests.py unit
+
+# Pruebas de integración
+python run_tests.py integration
+
+# Pruebas End-to-End
+python run_tests.py e2e
+
+# Ejecutar toda la suite
+python run_tests.py all
+
+# Reporte de cobertura
+python run_tests.py coverage
+# Reportes generados en:
+# - HTML: htmlcov/index.html
+# - XML: coverage.xml
+# - Terminal: resumen en consola
+```
+
+## **Análisis de Amenazas: STRIDE + MITRE ATT&CK**
+
+Se realizó un **modelado de amenazas** aplicando frameworks de ciberseguridad estándar de la industria:
+
+- **STRIDE**: Para categorización conceptual de amenazas
+- **MITRE ATT&CK**: Para mapeo a técnicas reales de atacantes
+- **IoC**: Indicadores de compromiso calculables del dataset
+
+### Resultados Clave
+
+- **9 amenazas mapeadas** a técnicas MITRE ATT&CK específicas
+- **6 técnicas** identificadas (T1110, T1040, T1041, T1499, T1078, T1087)
+
+### Matriz de Amenazas
+
+| Feature (Dataset) | STRIDE (Categoría) | Amenaza Detectada | MITRE ATT&CK (Técnica) | IoC Propuesto | Estadísticas del Feature |
+|-------------------|-------------------|-------------------|------------------------|---------------|--------------------------|
+| `failed_logins` | **Spoofing** | Credential Stuffing / Brute Force | **T1110 - Brute Force** | >3 intentos fallidos por sesión | **Min:** 0.00, **Max:** 5.00, **P95:** 3.00 |
+| `encryption_used` | **Information Disclosure** | Tráfico sin cifrar interceptado | **T1040 - Network Sniffing** | encryption_used = 'None' + tráfico > umbral | **Valores únicos:** AES: 4,706, DES: 2,865, None: 1,966 |
+| `network_packet_size` | **Information Disclosure** | Exfiltración de datos | **T1041 - Exfiltration Over C2** | valores outlier sobre p95 | **Min:** 64.00, **Max:** 1,285.00, **P95:** 830.00 |
+| `protocol_type` | **Denial of Service** | Flood de paquetes / Protocol Abuse | **T1499 - Endpoint DoS** | ICMP > 50% + packet_size > p95 | **Valores únicos:** TCP: 6,624, UDP: 2,406, ICMP: 507 |
+| `login_attempts` | **Tampering** | Reconnaissance / Account Discovery | **T1087 - Account Discovery** | >5 intentos por sesión | **Min:** 1.00, **Max:** 13.00, **P95:** 7.00 |
+| `session_duration` | **Tampering** | Session Hijacking / Persistence | **T1078 - Valid Accounts** | duración outlier sobre p95 o < p5 | **Min:** 0.50, **Max:** 7,190.39, **P95:** 2,312.48 |
+| `ip_reputation_score` | **Spoofing** | IP Spoofing / Malicious Sources | **T1078 - Valid Accounts** | score < 0.3 (baja reputación) | **Min:** 0.00, **Max:** 0.92, **P95:** 0.65 |
+| `browser_type` | **Spoofing** | User Agent Spoofing | **T1078 - Valid Accounts** | browser_type = 'Unknown' + otros indicadores | **Valores únicos:** Chrome: 5,137, Firefox: 1,944, Edge: 1,469 |
+| `unusual_time_access` | **Spoofing** | Account Takeover / Temporal Anomaly | **T1078 - Valid Accounts** | unusual_time_access = 1 + otros indicadores | **Min:** 0.00, **Max:** 1.00, **P95:** 1.00 |
+
+### Detección de Amenazas con IoCs
+
+#### Metodología
+
+Implementamos **Indicadores de Compromiso (IoC)** basados en las reglas de amenazas identificadas:
+
+- **Detección de Fuerza Bruta**: >3 intentos fallidos por sesión
+- **Detección de Exfiltración**: Valores outlier sobre percentil 95
+- **Detección de Protocol Abuse**: ICMP con paquetes grandes
+- **Detección de Reconnaissance**: >5 intentos de login por sesión
+- **Detección de Session Hijacking**: Duración anómala de sesiones
+- **Detección de IP Spoofing**: Reputación IP < 0.3
+- **Detección de User Agent Spoofing**: Navegador desconocido
+- **Detección de Temporal Anomaly**: Acceso en horarios inusuales
+
+#### Rendimiento de IoCs
+
+- **Precisión**: 100.0% (Cero falsos positivos)
+- **Recall**: 77.8% (Detecta 77.8% de amenazas reales)
+- **F1-Score**: 87.5% (Excelente balance)
+
+**[Ver análisis completo y métricas detalladas](notebooks/Threat_Model.ipynb)**
+
+
+
+## **ARQUITECTURA DEL PROYECTO**
+
+Este proyecto implementa **Clean Architecture**, con cuatro capas y dependencias que apuntan hacia adentro.
+
+### **Principios fundamentales**
+
+-  **Dependencias apuntan hacia adentro**: Solo las capas externas dependen de las internas  
+- **Inversión de dependencias**: Las capas internas definen interfaces, las externas las implementan  
+- **Entidades independientes**:  El centro no conoce nada del exterior  
+- **Casos de uso aislados**: La aplicación no conoce detalles de frameworks  
+- **Interface Adapters**: Adaptadores conectan el interior con el exterior  
+- **Frameworks externos**: Detalles técnicos en la capa más externa 
+
+### **Diagrama de arquitectura**
+
+```mermaid
+graph TB
+    %% Definición de estilos
+    classDef entitiesLayer fill:#e8f5e8,stroke:#1b5e20,stroke-width:3px,color:#1b5e20
+    classDef useCasesLayer fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#4a148c
+    classDef adaptersLayer fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#01579b
+    classDef frameworksLayer fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#e65100
+    
+    %% Capa de Entidades
+    subgraph ENTITIES ["ENTITIES"]
+        E[Entidades de Negocio<br/>LogEntry, AnomalyResult<br/>DatasetConfig, DeviceType]
+    end
+    
+    %% Capa de Casos de Uso
+    subgraph USECASES ["USE CASES"]
+        U[Casos de Uso<br/>AnalyzeLogs, TrainModel<br/>GetDatasetInfo, ExecutePipeline]
+    end
+    
+    %% Capa de Adaptadores
+    subgraph ADAPTERS ["INTERFACE ADAPTERS"]
+        A[Adaptadores<br/>Controllers, Presenters<br/>Gateways, Repositories]
+    end
+    
+    %% Capa de Frameworks
+    subgraph FRAMEWORKS ["FRAMEWORKS & DRIVERS"]
+        F[Frameworks<br/>FastAPI, ML Libraries<br/>External APIs, Database]
+    end
+    
+    %% Flujo de dependencias
+    F -->|"depende de"| A
+    A -->|"depende de"| U
+    U -->|"depende de"| E
+    
+    %% Aplicar estilos
+    class E entitiesLayer
+    class U useCasesLayer
+    class A adaptersLayer
+    class F frameworksLayer
+```
+
+### **Agentes**
+
+Este proyecto implementa un sistema de **agentes inteligentes** para la **detección de intrusiones en ciberseguridad**, analizando **tráfico de red y comportamiento de usuario**.
+
+### **Agentes Especializados**
+
+1. **SupervisedAgent**  
+   Detecta amenazas conocidas usando patrones y firmas predefinidas.
+2. **UnsupervisedAgent**  
+   Identifica anomalías no supervisadas aplicando técnicas de machine learning.
+3. **DecisionAgent**  
+   Toma decisiones de respuesta basadas en reglas dinámicas y confianza del modelo.
+4. **ReportAgent**  
+   Genera reportes finales con hallazgos, métricas y recomendaciones.
+
+### **Pipeline de agentes**
+
+```mermaid
+graph TB
+    %% Estilos para agentes
+    classDef supervisedStyle fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    classDef unsupervisedStyle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#e65100
+    classDef decisionStyle fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
+    classDef reportStyle fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,color:#4a148c
+    
+    %% Agentes especializados
+    subgraph AGENTS ["Pipeline de Agentes Inteligentes"]
+        A1[SupervisedAgent<br/>Detección de Amenazas Conocidas]
+        A2[UnsupervisedAgent<br/>Detección de Anomalías]
+        A3[DecisionAgent<br/>Toma de Decisiones]
+        A4[ReportAgent<br/>Generación de Reportes]
+    end
+    
+    %% Flujo principal con decisiones
+    A1 -->|Ataque Conocido| A3
+    A1 -->|Comportamiento Normal| A2
+    A2 -->|Anomalía Detectada| A3
+    A2 -->|Comportamiento Normal| A4
+    A3 --> A4
+    
+    %% Aplicar estilos
+    class A1 supervisedStyle
+    class A2 unsupervisedStyle
+    class A3 decisionStyle
+    class A4 reportStyle
+
+    %% Aplicar estilos
+    class A1,A2,A4 agentStyle
+    class A3 decisionStyle
+```
 
 ## 🔧 Endpoints Principales
 
@@ -473,15 +383,8 @@ curl http://localhost:8000/dataset/info
 10. **is_encrypted**: Indicador de encriptación
 11. **geo_variation**: Variación de ubicación geográfica
 
-## 🎯 Pipeline de Agentes (LangGraph)
 
-El sistema incluye un pipeline de agentes inteligentes:
-
-1. **Agente de Ingestión**: Valida y sanitiza datos IoT
-2. **Agente de ML Scoring**: Ejecuta el modelo de detección
-3. **Agente de Decisión**: Sugiere acciones basadas en el score
-
-### **Acciones Sugeridas:**
+### **🎯 Acciones Sugeridas:**
 - **monitor**: Monitorear el dispositivo
 - **investigate**: Investigar más a fondo
 - **alert**: Enviar alerta de seguridad
@@ -515,37 +418,34 @@ Los logs se muestran en la consola donde se ejecuta la API.
 ### **Persistencia del Modelo:**
 El modelo entrenado se guarda automáticamente y se recarga en cada reinicio.
 
-## 🧪 Pruebas
+### **🧪 Pruebas Manuales (API)**
 
-### **Pruebas Manuales:**
 ```bash
-# Verificar estado
+# Verificar estado de la API
 curl http://localhost:8000/health
 
-# Obtener información
-curl http://localhost:8000/info
+# Obtener información del proyecto
+curl http://localhost:8000/
 
-# Entrenar modelo
+# Entrenar modelo con datos de Kaggle
 curl -X POST http://localhost:8000/train/iot/kaggle
 
-# Analizar datos
+# Analizar logs de sesión de red
 curl -X POST "http://localhost:8000/analyze" \
   -H "Content-Type: application/json" \
   -d '{
     "logs": [{
-      "timestamp": "2025-01-20 12:00:00",
-      "device_id": "thermostat_001",
-      "device_type": "thermostat",
-      "cpu_usage": 75.5,
-      "memory_usage": 60.2,
-      "network_in_kb": 150,
-      "network_out_kb": 300,
-      "packet_rate": 450,
-      "avg_response_time_ms": 250.0,
-      "service_access_count": 5,
-      "failed_auth_attempts": 2,
-      "is_encrypted": 1,
-      "geo_location_variation": 5.5
+      "session_id": "session_001",
+      "network_packet_size": 150,
+      "protocol_type": "TCP",
+      "login_attempts": 5,
+      "session_duration": 250.0,
+      "encryption_used": "AES",
+      "ip_reputation_score": 0.8,
+      "failed_logins": 2,
+      "browser_type": "Chrome",
+      "unusual_time_access": 0,
+      "attack_detected": 0
     }]
   }'
 ```

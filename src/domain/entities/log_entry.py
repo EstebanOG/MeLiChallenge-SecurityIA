@@ -4,20 +4,18 @@ from typing import Optional
 
 @dataclass(frozen=True)
 class LogEntry:
-    # Campos del nuevo dataset de IoT/smart systems
-    timestamp: str
-    device_id: str
-    device_type: str
-    cpu_usage: float
-    memory_usage: float
-    network_in_kb: int
-    network_out_kb: int
-    packet_rate: int
-    avg_response_time_ms: float
-    service_access_count: int
-    failed_auth_attempts: int
-    is_encrypted: int
-    geo_location_variation: float
+    # Campos del dataset de threat intelligence
+    session_id: str
+    network_packet_size: int
+    protocol_type: str
+    login_attempts: int
+    session_duration: float
+    encryption_used: str
+    ip_reputation_score: float
+    failed_logins: int
+    browser_type: str
+    unusual_time_access: bool
+    attack_detected: bool
     # Campo opcional para el label (puede no estar presente en datos sin etiquetar)
     label: Optional[str] = None
 
