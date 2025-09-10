@@ -58,6 +58,7 @@ class AnalyzeThreatLogsUseCase:
         anomaly_detected = decision_result.output.get("anomaly_detected", False) if decision_result else False
         action_taken = decision_result.output.get("action", "monitor") if decision_result else "monitor"
         confidence = decision_result.output.get("confidence", 0.0) if decision_result else 0.0
+        threat_modeling = decision_result.output.get("threat_modeling", {}) if decision_result else {}
         
         # Calcular score de amenaza
         threat_score = 0.0
@@ -78,7 +79,8 @@ class AnalyzeThreatLogsUseCase:
                 "anomaly_detected": anomaly_detected,
                 "reasoning": decision_result.output.get("reasoning", "Análisis completado") if decision_result else "Análisis completado"
             },
-            batch_size=len(request.logs)
+            batch_size=len(request.logs),
+            threat_modeling=threat_modeling
         )
     
     def _is_supervised_model_trained(self) -> bool:

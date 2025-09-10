@@ -49,6 +49,7 @@ class ThreatAnalyzeResponseDTO(BaseModel):
     score: float
     decision: Dict[str, Any]
     batch_size: int
+    threat_modeling: Optional[Dict[str, Any]] = None
 
 
 class TrainResponseDTO(BaseModel):

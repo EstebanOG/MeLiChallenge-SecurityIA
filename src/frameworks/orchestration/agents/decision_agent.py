@@ -73,6 +73,13 @@ class DecisionAgent:
         decision = self._make_decision(logs, attack_known, anomaly_detected, threat_level, anomaly_score)
         
         print(f"⚡ [DECISION] Decisión tomada: {decision['action']}")
+        
+        # Extraer información de threat modeling si está disponible
+        threat_modeling = self._extract_threat_modeling(decision, logs)
+        
+        # Debug: Mostrar threat modeling extraído
+        print(f"🔍 [DECISION] Threat modeling extraído: {threat_modeling}")
+        
         state = add_execution_step(state, self.name, {
             "decision": "action_taken",
             "action": decision["action"],
@@ -82,6 +89,7 @@ class DecisionAgent:
             "anomaly_score": anomaly_score,
             "anomaly_detected": anomaly_detected,
             "threat_detected": attack_known,
+            "threat_modeling": threat_modeling,
             "next_agent": "report_agent"
         })
         
@@ -335,3 +343,191 @@ class DecisionAgent:
             "block_and_alert": "block_and_alert"
         }
         return action_mapping.get(llm_action.lower(), "investigate")
+    
+    def _extract_threat_modeling(self, decision: Dict[str, Any], logs: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Extrae información de threat modeling (MITRE ATT&CK y STRIDE) de la decisión.
+        
+        Args:
+            decision: Diccionario con la decisión tomada
+            logs: Lista de logs analizados
+            
+        Returns:
+            Diccionario con información de threat modeling en formato específico
+        """
+        # Obtener información MITRE/STRIDE de la decisión si está disponible
+        mitre_technique = decision.get('mitre_technique', 'Unknown')
+        stride_category = decision.get('stride_category', 'Unknown')
+        
+        # Si hay análisis de LLM disponible, usarlo
+        llm_analysis = decision.get('llm_analysis', {})
+        if llm_analysis:
+            mitre_technique = llm_analysis.get('mitre_technique', mitre_technique)
+            stride_category = llm_analysis.get('stride_category', stride_category)
+        
+        # Si no hay información en la decisión, intentar extraer de Gemini directamente
+        if mitre_technique == 'Unknown' and self.use_llm and self.gemini_agent and logs:
+            try:
+                print("🔍 [DECISION] Extrayendo información MITRE/STRIDE de Gemini...")
+                llm_analysis = self.gemini_agent.analyze_log(logs[0])
+                mitre_technique = llm_analysis.get('mitre_technique', 'Unknown')
+                stride_category = llm_analysis.get('stride_category', 'Unknown')
+                print(f"  - Técnica MITRE: {mitre_technique}")
+                print(f"  - Categoría STRIDE: {stride_category}")
+            except Exception as e:
+                print(f"⚠️ [DECISION] Error extrayendo información de Gemini: {e}")
+        
+        # Extraer técnicas MITRE en formato de lista
+        mitre_attack_list = self._parse_mitre_techniques_to_list(mitre_technique)
+        
+        # Extraer categorías STRIDE en formato de lista
+        stride_list = self._parse_stride_categories_to_list(stride_category)
+        
+        return {
+            "mitre_attack": mitre_attack_list,
+            "stride": stride_list
+        }
+    
+    def _parse_mitre_techniques_to_list(self, mitre_technique: str) -> List[Dict[str, str]]:
+        """
+        Parsea técnicas MITRE en formato de lista para threat modeling.
+        
+        Args:
+            mitre_technique: String con técnica MITRE (ej: "T1110 - Brute Force")
+            
+        Returns:
+            Lista de diccionarios con technique_id, technique y tactic
+        """
+        if not mitre_technique or mitre_technique == 'Unknown':
+            return [
+                {
+                    "technique_id": "N/A",
+                    "technique": "No aplica - Sin amenazas detectadas",
+                    "tactic": "N/A"
+                }
+            ]
+        
+        # Mapeo de técnicas a tácticas
+        technique_to_tactic = {
+            "T1110": "Credential Access",
+            "T1040": "Collection", 
+            "T1041": "Exfiltration",
+            "T1499": "Impact",
+            "T1087": "Discovery",
+            "T1078": "Defense Evasion",
+            "T1055": "Defense Evasion",
+            "T1059": "Execution",
+            "T1069": "Discovery",
+            "T1071": "Command and Control",
+            "T1072": "Execution",
+            "T1082": "Discovery",
+            "T1083": "Discovery",
+            "T1090": "Defense Evasion",
+            "T1095": "Command and Control",
+            "T1105": "Defense Evasion"
+        }
+        
+        # Extraer ID de técnica
+        if ' - ' in mitre_technique:
+            technique_id, technique_name = mitre_technique.split(' - ', 1)
+            technique_id = technique_id.strip()
+            technique_name = technique_name.strip()
+        else:
+            technique_id = mitre_technique
+            technique_name = mitre_technique
+        
+        # Obtener táctica
+        tactic = technique_to_tactic.get(technique_id, "Unknown")
+        
+        # Retornar solo la técnica detectada
+        return [
+            {
+                "technique_id": technique_id,
+                "technique": technique_name,
+                "tactic": tactic
+            }
+        ]
+    
+    def _parse_stride_categories_to_list(self, stride_category: str) -> List[str]:
+        """
+        Parsea categorías STRIDE en formato de lista para threat modeling.
+        
+        Args:
+            stride_category: String con categoría STRIDE
+            
+        Returns:
+            Lista de categorías STRIDE
+        """
+        if not stride_category or stride_category == 'Unknown':
+            return ["No aplica - Sin amenazas detectadas"]
+        
+        # Mapeo de categorías STRIDE
+        stride_mapping = {
+            "Spoofing": "Spoofing",
+            "Tampering": "Tampering", 
+            "Repudiation": "Repudiation",
+            "Information Disclosure": "Information Disclosure",
+            "Denial of Service": "Denial of Service",
+            "Elevation of Privilege": "Elevation of Privilege"
+        }
+        
+        # Normalizar categoría
+        normalized_category = stride_mapping.get(stride_category, stride_category)
+        
+        # Retornar solo la categoría detectada
+        return [normalized_category]
+    
+    def _parse_mitre_technique(self, mitre_technique: str) -> Dict[str, str]:
+        """
+        Parsea una técnica MITRE en sus componentes (método legacy).
+        
+        Args:
+            mitre_technique: String con técnica MITRE (ej: "T1110 - Brute Force")
+            
+        Returns:
+            Diccionario con technique_id, technique y tactic
+        """
+        if not mitre_technique or mitre_technique == 'Unknown':
+            return {
+                "technique_id": "Unknown",
+                "technique": "Unknown",
+                "tactic": "Unknown"
+            }
+        
+        # Mapeo de técnicas a tácticas
+        technique_to_tactic = {
+            "T1110": "Credential Access",
+            "T1040": "Collection", 
+            "T1041": "Exfiltration",
+            "T1499": "Impact",
+            "T1087": "Discovery",
+            "T1078": "Defense Evasion",
+            "T1055": "Defense Evasion",
+            "T1059": "Execution",
+            "T1069": "Discovery",
+            "T1071": "Command and Control",
+            "T1072": "Execution",
+            "T1082": "Discovery",
+            "T1083": "Discovery",
+            "T1090": "Defense Evasion",
+            "T1095": "Command and Control",
+            "T1105": "Defense Evasion"
+        }
+        
+        # Extraer ID de técnica
+        if ' - ' in mitre_technique:
+            technique_id, technique_name = mitre_technique.split(' - ', 1)
+            technique_id = technique_id.strip()
+            technique_name = technique_name.strip()
+        else:
+            technique_id = mitre_technique
+            technique_name = mitre_technique
+        
+        # Obtener táctica
+        tactic = technique_to_tactic.get(technique_id, "Unknown")
+        
+        return {
+            "technique_id": technique_id,
+            "technique": technique_name,
+            "tactic": tactic
+        }
