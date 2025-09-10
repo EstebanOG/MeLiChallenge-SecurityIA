@@ -18,7 +18,7 @@ from src.frameworks.ml.supervised_model import SupervisedThreatDetector
 class SupervisedThreatDetectorAdapter(ThreatDetectorInterface):
     """Adaptador para el detector de amenazas supervisado."""
     
-    def __init__(self, model_path: str = "models/supervised_model.joblib", threshold: float = 0.9):
+    def __init__(self, model_path: str = "models/supervised_model.joblib", threshold: float = 0.5):
         self.model_path = model_path
         self.detector = SupervisedThreatDetector(model_path, threshold)
         self._is_ready = False

@@ -307,9 +307,11 @@ class SupervisedThreatDetector:
         probabilities = self.model.predict_proba(X_scaled)[0]
         probability = probabilities[1]  # Probabilidad de ataque
         
-        # Debug: Mostrar probabilidades
+        # Debug: Mostrar probabilidades y features
         print(f"🔍 [SUPERVISED] Probabilidades: Normal={probabilities[0]:.3f}, Ataque={probability:.3f}")
         print(f"🔍 [SUPERVISED] Threshold actual: {self.threshold}")
+        print(f"🔍 [SUPERVISED] Features procesadas: {X_scaled[0]}")
+        print(f"🔍 [SUPERVISED] Log original: {log_data[0]}")
         
         # Usar threshold para clasificación
         prediction = 1 if probability >= self.threshold else 0
@@ -530,8 +532,9 @@ class SupervisedThreatDetector:
         y_proba = self.model.predict_proba(X_val)[:, 1]
         
         # Probar solo algunos thresholds clave (más rápido)
-        thresholds = [0.3, 0.4, 0.5, 0.6, 0.7]
-        best_threshold = self.threshold
+        # Priorizar 0.5 para mantener consistencia y reducir falsos positivos
+        thresholds = [0.5, 0.4, 0.6, 0.3, 0.7]
+        best_threshold = 0.5  # Usar 0.5 como default
         best_f1 = 0
         
         for threshold in thresholds:
