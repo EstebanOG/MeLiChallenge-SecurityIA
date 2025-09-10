@@ -62,6 +62,34 @@ class DecisionAgent:
         anomaly_score = unsupervised_result.get("anomaly_score", 0.0) if unsupervised_result else 0.0
         threat_level = supervised_result.get("threat_level", "low")
         
+        # Preservar scores individuales de ambos agentes
+        supervised_individual_scores = supervised_result.get("individual_scores", []) if supervised_result else []
+        unsupervised_individual_scores = unsupervised_result.get("individual_scores", []) if unsupervised_result else []
+        
+        # Combinar scores individuales (priorizar el agente que detectó amenazas)
+        if attack_known and supervised_individual_scores:
+            individual_scores = supervised_individual_scores
+            print(f"🔍 [DECISION] Usando scores del agente supervisado: {individual_scores}")
+        elif unsupervised_individual_scores:
+            individual_scores = unsupervised_individual_scores
+            print(f"🔍 [DECISION] Usando scores del agente no supervisado: {individual_scores}")
+        else:
+            individual_scores = []
+            print("⚠️ [DECISION] No se encontraron scores individuales de ningún agente")
+        
+        # Combinar logs sospechosos de ambos agentes
+        supervised_suspicious = supervised_result.get("suspicious_logs", []) if supervised_result else []
+        unsupervised_suspicious = unsupervised_result.get("suspicious_logs", []) if unsupervised_result else []
+        
+        # Combinar y deduplicar logs sospechosos
+        all_suspicious_logs = {}
+        for log_info in supervised_suspicious + unsupervised_suspicious:
+            key = log_info.get("index", -1)
+            if key not in all_suspicious_logs or log_info.get("threat_score", 0) > all_suspicious_logs[key].get("threat_score", 0):
+                all_suspicious_logs[key] = log_info
+        
+        combined_suspicious_logs = list(all_suspicious_logs.values())
+        
         # Debug: Mostrar resultados de agentes
         print(f"🔍 [DECISION] Resultados de agentes:")
         print(f"  - Supervisado: {supervised_result.get('decision', 'unknown')} (threat_level: {threat_level})")
@@ -90,6 +118,8 @@ class DecisionAgent:
             "anomaly_detected": anomaly_detected,
             "threat_detected": attack_known,
             "threat_modeling": threat_modeling,
+            "individual_scores": individual_scores,
+            "suspicious_logs": combined_suspicious_logs,
             "next_agent": "report_agent"
         })
         

@@ -96,13 +96,13 @@ class PipelineResultBuilder:
     
     def _map_agent_name_to_type(self, agent_name: str) -> AgentType:
         """Mapea el nombre del agente a su tipo."""
-        if "supervised" in agent_name:
+        if agent_name == "supervised_agent":
             return AgentType.INGESTION
-        elif "unsupervised" in agent_name:
+        elif agent_name == "unsupervised_agent":
             return AgentType.ANALYSIS
-        elif "decision" in agent_name:
+        elif agent_name == "decision_agent":
             return AgentType.DECISION
-        elif "report" in agent_name:
+        elif agent_name == "report_agent":
             return AgentType.NOTIFICATION
         else:
             return AgentType.ANALYSIS  # Default
