@@ -10,6 +10,7 @@ from src.domain.entities.agent import AgentContext
 from src.domain.entities.pipeline import PipelineExecution
 from src.application.interfaces.pipeline_orchestrator import PipelineOrchestrator
 from src.application.interfaces.threat_detector_interface import ThreatDetectorInterface
+from src.application.interfaces.anomaly_detector import AnomalyDetector
 from .graph import LangGraphBuilder
 from .execution import LangGraphPipelineExecutor
 
@@ -20,8 +21,8 @@ if TYPE_CHECKING:
 class LangGraphPipelineOrchestrator(PipelineOrchestrator):
     """Orquestador que usa LangGraph para ejecutar el pipeline de agentes."""
     
-    def __init__(self, threat_detector: ThreatDetectorInterface):
-        self.graph_builder = LangGraphBuilder(threat_detector)
+    def __init__(self, threat_detector: ThreatDetectorInterface, anomaly_detector: Optional[AnomalyDetector] = None):
+        self.graph_builder = LangGraphBuilder(threat_detector, anomaly_detector)
         self.pipeline_executor = LangGraphPipelineExecutor()
         self._graph = None
     

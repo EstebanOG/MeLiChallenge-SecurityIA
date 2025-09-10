@@ -52,9 +52,10 @@ class AnalyzeThreatLogsUseCase:
         decision_result = execution_result.get_agent_result(AgentType.DECISION)
         report_result = execution_result.get_agent_result(AgentType.NOTIFICATION)
         
-        # Construir respuesta basada en los resultados
-        threat_detected = supervised_result.output.get("decision") == "attack_known" if supervised_result else False
-        anomaly_detected = unsupervised_result.output.get("decision") == "anomalous" if unsupervised_result else False
+        # Construir respuesta basada en los resultados del agente de decisión
+        # Usar los valores del agente de decisión para mantener consistencia
+        threat_detected = decision_result.output.get("threat_detected", False) if decision_result else False
+        anomaly_detected = decision_result.output.get("anomaly_detected", False) if decision_result else False
         action_taken = decision_result.output.get("action", "monitor") if decision_result else "monitor"
         confidence = decision_result.output.get("confidence", 0.0) if decision_result else 0.0
         

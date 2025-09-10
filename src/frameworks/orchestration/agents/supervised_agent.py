@@ -32,7 +32,7 @@ class SupervisedAgent:
         confidence = prediction['confidence']
         probability = prediction['probability']
         reasoning = prediction['reasoning']
-        
+    
         if is_attack:
             threat_level = "high" if probability > 0.8 else "medium"
             state = add_execution_step(state, self.name, {

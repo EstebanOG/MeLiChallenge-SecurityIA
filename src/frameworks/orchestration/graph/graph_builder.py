@@ -16,15 +16,16 @@ from ..agents import (
 )
 from .flow_router import FlowRouter
 from ....application.interfaces.threat_detector_interface import ThreatDetectorInterface
+from ....application.interfaces.anomaly_detector import AnomalyDetector
 
 
 class LangGraphBuilder:
     """Constructor de grafos LangGraph para el pipeline de agentes."""
     
-    def __init__(self, threat_detector: ThreatDetectorInterface):
+    def __init__(self, threat_detector: ThreatDetectorInterface, anomaly_detector: Optional[AnomalyDetector] = None):
         self.agents = {
             "supervised_agent": SupervisedAgent(threat_detector),
-            "unsupervised_agent": UnsupervisedAgent(),
+            "unsupervised_agent": UnsupervisedAgent(anomaly_detector),
             "decision_agent": DecisionAgent(),
             "report_agent": ReportAgent()
         }

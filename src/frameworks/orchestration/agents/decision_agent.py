@@ -27,9 +27,10 @@ class DecisionAgent:
         
         # Combinar información de ambos agentes
         attack_known = supervised_result.get("decision") == "attack_known"
-        anomaly_detected = unsupervised_result.get("decision") == "anomalous"
+        # Determinar si hay anomalía basándose en el score, no solo en la decisión del agente
+        anomaly_score = unsupervised_result.get("anomaly_score", 0.0) if unsupervised_result else 0.0
+        anomaly_detected = anomaly_score > 0.5  # Considerar anomalía si el score es mayor a 0.5
         threat_level = supervised_result.get("threat_level", "low")
-        anomaly_score = unsupervised_result.get("anomaly_score", 0.0)
         
         # Tomar decisión basada en amenazas y anomalías
         decision = self._make_decision(logs, attack_known, anomaly_detected, threat_level, anomaly_score)
@@ -42,6 +43,8 @@ class DecisionAgent:
             "reasoning": decision["reasoning"],
             "threat_level": threat_level,
             "anomaly_score": anomaly_score,
+            "anomaly_detected": anomaly_detected,
+            "threat_detected": attack_known,
             "next_agent": "report_agent"
         })
         
@@ -78,6 +81,13 @@ class DecisionAgent:
                     "action": "block_and_alert",
                     "confidence": 0.9,
                     "reasoning": "Ataque de alto riesgo detectado. Bloquear y alertar inmediatamente."
+                }
+            else:
+                # Ataque conocido pero tipo no clasificado
+                return {
+                    "action": "block_ip",
+                    "confidence": 0.8,
+                    "reasoning": "Ataque conocido detectado. Bloquear IP por seguridad."
                 }
         
         # Si solo hay anomalías (sin ataques conocidos)

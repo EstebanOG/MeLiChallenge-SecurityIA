@@ -52,9 +52,9 @@ class ReportAgent:
             "execution_path": execution_path,
             "action_taken": action,
             "attack_known": supervised_result.get("decision") == "attack_known",
-            "anomaly_detected": unsupervised_result.get("decision") == "anomalous",
+            "anomaly_detected": unsupervised_result.get("decision") == "anomalous" if unsupervised_result else False,
             "threat_level": supervised_result.get("threat_level", "low"),
-            "anomaly_score": unsupervised_result.get("anomaly_score", 0.0),
+            "anomaly_score": unsupervised_result.get("anomaly_score", 0.0) if unsupervised_result else 0.0,
             "confidence": decision_result.get("confidence", 0.5),
             "reasoning": decision_result.get("reasoning", "Análisis completado"),
             "report_details": {
