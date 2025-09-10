@@ -1653,7 +1653,7 @@ class IsolationForestDetector(AnomalyDetector):
             print(f"❌ Error durante retraining, modelo restaurado: {e}")
             return {"error": f"Retraining failed: {str(e)}"}
     
-    def update_model_periodically(self, new_logs: List[LogEntry], 
+    def update_model_periodically(self, new_logs: List[ThreatLogItemDTO], 
                                 update_frequency_hours: int = 24,
                                 drift_threshold: float = 0.1) -> Dict[str, Any]:
         """

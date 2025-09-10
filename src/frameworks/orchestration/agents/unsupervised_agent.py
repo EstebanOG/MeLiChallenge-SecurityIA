@@ -8,7 +8,7 @@ anómalos que no están en los patrones conocidos usando Isolation Forest.
 from typing import List, Dict, Any, Optional
 from .base_agent import LangGraphAgentState, add_execution_step
 from src.application.interfaces.anomaly_detector import AnomalyDetector
-from src.domain.entities.log_entry import LogEntry
+from src.domain.entities.dto import ThreatLogItemDTO
 
 
 class UnsupervisedAgent:
@@ -109,12 +109,12 @@ class UnsupervisedAgent:
         
         return state
     
-    def _convert_to_log_entries(self, logs: List[Dict[str, Any]]) -> List[LogEntry]:
-        """Convierte logs de diccionarios a objetos LogEntry."""
+    def _convert_to_log_entries(self, logs: List[Dict[str, Any]]) -> List[ThreatLogItemDTO]:
+        """Convierte logs de diccionarios a objetos ThreatLogItemDTO."""
         log_entries = []
         for log in logs:
             try:
-                log_entry = LogEntry(
+                log_entry = ThreatLogItemDTO(
                     session_id=log.get('session_id', ''),
                     network_packet_size=float(log.get('network_packet_size', 0)),
                     protocol_type=log.get('protocol_type', ''),
@@ -124,8 +124,7 @@ class UnsupervisedAgent:
                     ip_reputation_score=float(log.get('ip_reputation_score', 0)),
                     failed_logins=int(log.get('failed_logins', 0)),
                     browser_type=log.get('browser_type', ''),
-                    unusual_time_access=bool(log.get('unusual_time_access', False)),
-                    attack_detected=bool(log.get('attack_detected', False))
+                    unusual_time_access=int(log.get('unusual_time_access', 0))
                 )
                 log_entries.append(log_entry)
             except (ValueError, TypeError) as e:
