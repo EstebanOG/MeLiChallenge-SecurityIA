@@ -110,6 +110,17 @@ class DatasetSampleDTO(BaseModel):
     data: List[Dict[str, Any]]
 
 
+class DatasetDownloadResponseDTO(BaseModel):
+    """DTO para respuesta de descarga de dataset."""
+    success: bool
+    message: str
+    dataset_name: str
+    download_path: str
+    total_rows: int
+    features: int
+    processing_time: float
+
+
 class HealthResponseDTO(BaseModel):
     """DTO para respuesta de salud del sistema."""
     status: str
